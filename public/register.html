@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <!-- user-scalable=yes erlaubt das Zoomen auf Mobilgeräten -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Konto erstellen</title>
+  <link rel="stylesheet" href="register.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <h1>Neues Konto erstellen</h1>
+  </header>
+  <main>
+    <form id="registerForm">
+      <h2>Persönliche Daten</h2>
+      
+      <div class="form-group">
+        <label for="username">Benutzername</label>
+        <input type="text" id="username" name="username" placeholder="Benutzername eingeben" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Passwort</label>
+        <input type="password" id="password" name="password" placeholder="Sicheres Passwort wählen" required>
+        <small class="form-hint">Mindestens 8 Zeichen mit Zahlen und Sonderzeichen</small>
+      </div>
+      
+      <div class="form-group">
+        <label for="passwordConfirm">Passwort bestätigen</label>
+        <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="Passwort wiederholen" required>
+      </div>
+      
+      <div class="form-terms">
+        <input type="checkbox" id="terms" name="terms" required>
+        <label for="terms">Ich akzeptiere die <a href="#">Nutzungsbedingungen</a> und <a href="#">Datenschutzrichtlinien</a></label>
+      </div>
+      
+      <button type="submit">Konto erstellen</button>
+      
+      <div class="login-link">
+        Bereits registriert? <a href="login.html">Hier anmelden</a>
+      </div>
+    </form>
+    
+    <div id="message" class="hidden"></div>
+  </main>
+  <script src="register.js"></script>
+</body>
+</html>
