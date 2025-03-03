@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat Bereich</title>
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+  <header>
+    <h1>Chat Bereich</h1>
+    <button id="logoutBtn">Logout</button>
+  </header>
+  <main>
+    <!-- Login-Bereich, falls nicht eingeloggt -->
+    <div id="loginSection" class="hidden">
+      <h2>Bitte einloggen oder registrieren</h2>
+      <form id="loginForm">
+        <input type="text" name="username" placeholder="Benutzername" required>
+        <input type="password" name="password" placeholder="Passwort" required>
+        <button type="submit">Einloggen</button>
+      </form>
+      <button id="toRegisterButton">Registrieren</button>
+    </div>
+    <!-- Chat-Bereich -->
+    <div id="chatInterface" class="hidden">
+      <div id="channelList">
+        <!-- Kanäle -->
+      </div>
+      <div id="chatContainer">
+        <!-- Chatnachrichten -->
+      </div>
+      <form id="messageForm">
+        <input type="text" id="messageInput" name="message" placeholder="Deine Nachricht" required>
+        <button type="submit">Senden</button>
+      </form>
+      <!-- Bild-Upload (nur für Admins) -->
+      <form id="imageForm" class="hidden" enctype="multipart/form-data">
+        <input type="file" id="imageInput" name="image" accept="image/*">
+        <button type="submit">Bild senden</button>
+      </form>
+      <!-- Moderatoren-Panel (nur für Admins) -->
+      <div id="moderatorsPanel" class="hidden">
+        <h3>Von Dir ernannte Moderatoren</h3>
+        <ul id="moderatorsList"></ul>
+        <form id="appointModForm">
+          <input type="text" name="username" placeholder="Nutzername für Moderator" required>
+          <button type="submit">Moderator ernennen</button>
+        </form>
+      </div>
+    </div>
+  </main>
+  <script src="chat.js"></script>
+</body>
+</html>

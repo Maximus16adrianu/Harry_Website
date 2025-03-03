@@ -1,0 +1,212 @@
+body {
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+    background: #f8f9fa;
+    margin: 0;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  header {
+    background: #5e35b1;
+    color: #fff;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  main {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  section {
+    margin-bottom: 36px;
+  }
+  
+  h2 {
+    margin-top: 0;
+    color: #444;
+    border-bottom: 2px solid #eaeaea;
+    padding-bottom: 8px;
+    font-weight: 500;
+  }
+  
+  /* Container für Listen */
+  #requestListContainer,
+  #userListContainer {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    max-height: 450px;
+    overflow: auto;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  
+  .request-item,
+  .user-item {
+    border-bottom: 1px solid #eee;
+    padding: 14px;
+    transition: background-color 0.2s;
+  }
+  
+  .request-item:last-child,
+  .user-item:last-child {
+    border-bottom: none;
+  }
+  
+  .request-item:hover,
+  .user-item:hover {
+    background-color: #f9f9f9;
+  }
+  
+  button {
+    margin-right: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background-color: #5e35b1;
+    color: #fff;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.1s;
+  }
+  
+  button.danger {
+    background-color: #e53935;
+  }
+  
+  button.secondary {
+    background-color: #607d8b;
+  }
+  
+  /* Filterbereich für Nutzer */
+  #userFilterSection {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: #f0f2ff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  #userFilterSection label {
+    font-weight: 500;
+    color: #444;
+  }
+  
+  #userFilterSection input,
+  #userFilterSection select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 0.95em;
+    transition: border-color 0.2s;
+  }
+  
+  #userFilterSection input:focus,
+  #userFilterSection select:focus {
+    outline: none;
+    border-color: #5e35b1;
+  }
+  
+  /* Medien-Update Toggle */
+  #mediaUpdateToggleSection {
+    margin-bottom: 16px;
+  }
+  
+  #mediaUpdateToggleSection button {
+    background-color: #009688;
+  }
+  
+  /* Modal Fenster für Medien-Update */
+  #mediaUpdateModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none; /* per JS eingeblendet */
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+  }
+  
+  #mediaUpdateModal .modal-content {
+    background: #f0f2ff;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+  }
+  
+  .modal-close-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+  }
+  
+  /* Media Preview: Elemente nebeneinander */
+  .media-preview-row {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 16px;
+  }
+  
+  .preview-item {
+    text-align: center;
+  }
+  
+  .change-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    font-size: 0.85em;
+    background-color: #009688;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  .submit-media-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 0;
+    background-color: #5e35b1;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  /* Zusätzliche Stile für Moderatoren im Admin-Panel */
+.moderator-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Optional: Stil für Chat-Nachrichten von Moderatoren */
+.message.moderator {
+  border-left: 4px solid #1e88e5;
+}
