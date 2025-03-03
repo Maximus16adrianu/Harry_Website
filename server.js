@@ -7,6 +7,9 @@ const multer = require('multer');
 const app = express();
 const PORT = 3000;
 
+// Definiere den API Key als Konstante (8-stellige zufällige alphanumerische Zeichenkette)
+const API_KEY = "QjT6CoRwXS";
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -431,7 +434,7 @@ app.post('/api/admin/ban', authMiddleware, (req, res) => {
   
   // Wenn das Ziel ein Admin ist, muss ein API-Key übergeben werden und sich Admins dürfen nicht gegenseitig bannen
   if (targetIsAdmin) {
-    if (apiKey !== '1234') {
+    if (apiKey !== API_KEY) {
       return res.status(403).json({ message: 'Ungültiger API Key' });
     }
     if (req.user.username === username) {

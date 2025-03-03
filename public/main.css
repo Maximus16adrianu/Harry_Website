@@ -108,6 +108,17 @@ header h1 {
   font-weight: 500;
 }
 
+/* Extra Style für den Admin-Link */
+.sidebar ul li.admin-item a {
+  background: #e30613;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.sidebar ul li.admin-item a:hover {
+  background: #c10010;
+}
+
 /* Main Content */
 main {
   margin-left: 260px;
