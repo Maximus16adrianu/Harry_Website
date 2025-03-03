@@ -82,9 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Rendert die Nachrichten im Chat.
-  // Bei replace === true wird der Container neu aufgebaut und der Scrollzustand relativ angepasst.
-  // Bei replace === false (beim Nachladen älterer Nachrichten) werden die neuen Nachrichten oben eingefügt.
+  // Rendert die Nachrichten im Chat
   function renderMessages(messages, replace = false) {
     if (replace) {
       const threshold = 50; // Pixel, um zu bestimmen, ob der Nutzer nahe dem unteren Rand ist
@@ -234,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Startet das Polling für den aktuellen Chat – hier nur, wenn der Nutzer nahe dem unteren Rand ist
+  // Startet das Polling für den aktuellen Chat
   function startPolling() {
     if (pollingInterval) clearInterval(pollingInterval);
     if (currentChannel) {

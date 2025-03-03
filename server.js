@@ -113,14 +113,13 @@ function authMiddleware(req, res, next) {
   next();
 }
 
-// Admin-Auth via API-Key (für bestimmte Endpunkte)
-function adminAuthMiddleware(req, res, next) {
-  const apiKey = req.query.apiKey || req.body.apiKey;
-  if (apiKey !== '1234') {
-    return res.status(403).json({ message: 'Ungültiger API Key' });
+// Zusätzliche Middleware für Endpunkte, die ausschließlich Admins vorbehalten sind
+function adminOnlyMiddleware(req, res, next) {
+  if (req.user && req.user.isAdmin) {
+    next();
+  } else {
+    return res.status(403).json({ message: 'Nur Admins dürfen diese Aktion ausführen' });
   }
-  req.user = { username: 'admin', isAdmin: true };
-  next();
 }
 
 /* ---------------------------
@@ -315,7 +314,6 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
 
 // Endpoint für Bild-Uploads (nur für Admins)
 // Hier wird Multer innerhalb der Routenfunktion aufgerufen, sodass wir Fehler (z. B. vom fileFilter) abfangen können.
-// Endpoint für Bild-Uploads (nur für Admins)
 app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
   // Direkt vor Multer prüfen: Ist der User Admin?
   if (!req.user.isAdmin) {
@@ -360,7 +358,6 @@ app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
   });
 });
 
-
 app.delete('/api/chats/:chatName', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
   if (chatName === 'Admin_chat' && !req.user.isAdmin) {
@@ -401,15 +398,18 @@ app.delete('/api/chats/:chatName', authMiddleware, (req, res) => {
 });
 
 /* ---------------------------
-   Admin-Endpunkte (geschützt mit API-Key)
+   Admin-Endpunkte
+   (Hier erhalten die meisten Endpunkte den Schutz durch authMiddleware und adminOnlyMiddleware)
 ----------------------------*/
-app.use('/api/admin', adminAuthMiddleware);
 
-app.post('/api/admin/ban', (req, res) => {
-  const { username } = req.body;
-  if (!username) {
-    return res.status(400).json({ message: 'Username erforderlich' });
+// Bann-Endpunkt: Nur Admins dürfen bannen. 
+// Reg. Nutzer werden ohne API-Key gebannt, Admins nur bei gültigem API-Key.
+app.post('/api/admin/ban', authMiddleware, (req, res) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ message: 'Nur Admins dürfen diese Aktion ausführen' });
   }
+  
+  const { username, apiKey } = req.body;
   
   // Suche zuerst in users.json (normale Nutzer)
   let users = readJSON(usersFile);
@@ -429,24 +429,33 @@ app.post('/api/admin/ban', (req, res) => {
     return res.status(404).json({ message: 'Nutzer nicht gefunden' });
   }
   
+  // Wenn das Ziel ein Admin ist, muss ein API-Key übergeben werden und sich Admins dürfen nicht gegenseitig bannen
+  if (targetIsAdmin) {
+    if (apiKey !== '1234') {
+      return res.status(403).json({ message: 'Ungültiger API Key' });
+    }
+    if (req.user.username === username) {
+      return res.status(403).json({ message: 'Admins können sich nicht selbst bannen' });
+    }
+  }
+  
   target.locked = true;
+  
   if (targetIsAdmin) {
     let admins = readJSON(adminsFile);
     admins = admins.map(a => a.username === username ? target : a);
     writeJSON(adminsFile, admins);
-    // Nachrichten des gesperrten Nutzers aus allen Chats löschen
     deleteUserMessages(username);
     return res.json({ message: `Admin ${username} wurde gesperrt und alle Nachrichten wurden gelöscht` });
   } else {
     users = users.map(u => u.username === username ? target : u);
     writeJSON(usersFile, users);
-    // Nachrichten des gesperrten Nutzers aus allen Chats löschen
     deleteUserMessages(username);
     return res.json({ message: `Nutzer ${username} wurde gesperrt und alle Nachrichten wurden gelöscht` });
   }
 });
 
-app.post('/api/admin/unban', (req, res) => {
+app.post('/api/admin/unban', authMiddleware, adminOnlyMiddleware, (req, res) => {
   const { username } = req.body;
   if (!username) {
     return res.status(400).json({ message: 'Username erforderlich' });
@@ -481,12 +490,12 @@ app.post('/api/admin/unban', (req, res) => {
   }
 });
 
-app.get('/api/admin/requests', (req, res) => {
+app.get('/api/admin/requests', authMiddleware, adminOnlyMiddleware, (req, res) => {
   const pending = readJSON(requestAccessFile);
   res.json(pending);
 });
 
-app.post('/api/admin/reject', (req, res) => {
+app.post('/api/admin/reject', authMiddleware, adminOnlyMiddleware, (req, res) => {
   const { username } = req.body;
   if (!username) {
     return res.status(400).json({ message: 'Username erforderlich' });
@@ -501,7 +510,7 @@ app.post('/api/admin/reject', (req, res) => {
   res.json({ message: 'Anfrage abgelehnt und entfernt' });
 });
 
-app.post('/api/admin/approve', (req, res) => {
+app.post('/api/admin/approve', authMiddleware, adminOnlyMiddleware, (req, res) => {
   const { username } = req.body;
   if (!username) {
     return res.status(400).json({ message: 'Username erforderlich' });
@@ -523,13 +532,13 @@ app.post('/api/admin/approve', (req, res) => {
   res.json({ message: 'Benutzer genehmigt und in users.json übernommen' });
 });
 
-app.get('/api/admin/users', (req, res) => {
+app.get('/api/admin/users', authMiddleware, adminOnlyMiddleware, (req, res) => {
   const users = readJSON(usersFile).map(u => ({ ...u, isAdmin: false }));
   const admins = readJSON(adminsFile).map(a => ({ ...a, isAdmin: true }));
   res.json(users.concat(admins));
 });
 
-app.post('/api/admin/promote', (req, res) => {
+app.post('/api/admin/promote', authMiddleware, adminOnlyMiddleware, (req, res) => {
   const { username } = req.body;
   if (!username) {
     return res.status(400).json({ message: 'Username erforderlich' });
@@ -548,7 +557,7 @@ app.post('/api/admin/promote', (req, res) => {
   res.json({ message: `Nutzer ${username} wurde befördert` });
 });
 
-app.post('/api/admin/demote', (req, res) => {
+app.post('/api/admin/demote', authMiddleware, adminOnlyMiddleware, (req, res) => {
   const { username } = req.body;
   if (!username) {
     return res.status(400).json({ message: 'Username erforderlich' });
@@ -589,7 +598,7 @@ const mediaUpload = multer({ storage: mediaUploadStorage });
 // Endpunkt: Ersetzt die Medien im Public-Ordner
 // Erwartete Felder: "video", "image1", "image2"
 // Mapping: video -> video1.mp4, image1 -> bild1.png, image2 -> bild2.png
-app.post('/api/admin/update-media', mediaUpload.fields([
+app.post('/api/admin/update-media', authMiddleware, adminOnlyMiddleware, mediaUpload.fields([
   { name: 'video', maxCount: 1 },
   { name: 'image1', maxCount: 1 },
   { name: 'image2', maxCount: 1 }
