@@ -24,29 +24,20 @@
     <!-- Chat-Bereich -->
     <div id="chatInterface" class="hidden">
       <div id="channelList">
-        <!-- Kanäle -->
+        <!-- Hier erscheinen die Kanäle (Buttons) -->
       </div>
       <div id="chatContainer">
-        <!-- Chatnachrichten -->
+        <!-- Hier werden die Chatnachrichten angezeigt -->
       </div>
       <form id="messageForm">
         <input type="text" id="messageInput" name="message" placeholder="Deine Nachricht" required>
         <button type="submit">Senden</button>
       </form>
-      <!-- Bild-Upload (nur für Admins) -->
+      <!-- Bild-Upload-Formular (nur für Admins) -->
       <form id="imageForm" class="hidden" enctype="multipart/form-data">
         <input type="file" id="imageInput" name="image" accept="image/*">
         <button type="submit">Bild senden</button>
       </form>
-      <!-- Moderatoren-Panel (nur für Admins) -->
-      <div id="moderatorsPanel" class="hidden">
-        <h3>Von Dir ernannte Moderatoren</h3>
-        <ul id="moderatorsList"></ul>
-        <form id="appointModForm">
-          <input type="text" name="username" placeholder="Nutzername für Moderator" required>
-          <button type="submit">Moderator ernennen</button>
-        </form>
-      </div>
     </div>
   </main>
   <script src="chat.js"></script>

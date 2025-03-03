@@ -19,62 +19,44 @@
       </form>
     </section>
     
-    <!-- Admin Panel (sichtbar nach erfolgreichem Login) -->
+    <!-- Admin Panel -->
     <section id="adminPanel" class="hidden">
-      <!-- Registrierungsanfragen -->
-      <section id="registrationSection">
-        <h2>Registrierungsanfragen</h2>
-        <div id="requestListContainer">
-          <ul id="requestList"></ul>
-          <button id="toggleRequests" class="hidden">Mehr anzeigen</button>
-        </div>
+      <h2>Registrierungsanfragen</h2>
+      <div id="requestListContainer">
+        <div id="requestList"></div>
+        <button id="toggleRequests" class="hidden">Mehr anzeigen</button>
+      </div>
+      
+      <h2>Registrierte Nutzer</h2>
+      <section id="userFilterSection">
+        <label for="filterUsername">Benutzername:</label>
+        <input type="text" id="filterUsername" placeholder="Nach Namen filtern">
+        
+        <label for="filterBanned">Status:</label>
+        <select id="filterBanned">
+          <option value="all">Alle</option>
+          <option value="banned">Gebannt</option>
+          <option value="active">Aktiv</option>
+        </select>
+        
+        <label for="filterAdmin">Rolle:</label>
+        <select id="filterAdmin">
+          <option value="all">Alle</option>
+          <option value="admin">Admin</option>
+          <option value="user">Nutzer</option>
+        </select>
+        
+        <button id="applyFilters">Filter anwenden</button>
       </section>
       
-      <!-- Nutzerverwaltung -->
-      <section id="userManagementSection">
-        <h2>Registrierte Nutzer</h2>
-        <div id="userFilterSection">
-          <label for="filterUsername">Benutzername:</label>
-          <input type="text" id="filterUsername" placeholder="Nach Namen filtern">
-          
-          <label for="filterBanned">Status:</label>
-          <select id="filterBanned">
-            <option value="all">Alle</option>
-            <option value="banned">Gebannt</option>
-            <option value="active">Aktiv</option>
-          </select>
-          
-          <label for="filterRole">Rolle:</label>
-          <select id="filterRole">
-            <option value="all">Alle</option>
-            <option value="admin">Admin</option>
-            <option value="user">Nutzer</option>
-            <option value="moderator">Moderator</option>
-          </select>
-          
-          <button id="applyFilters">Filter anwenden</button>
-        </div>
-        <div id="userListContainer">
-          <ul id="userList"></ul>
-          <button id="toggleUsers" class="hidden">Mehr anzeigen</button>
-        </div>
-      </section>
-      
-      <!-- Moderatorverwaltung -->
-      <section id="moderatorsSection">
-        <h2>Moderatoren</h2>
-        <div id="moderatorsListContainer">
-          <ul id="moderatorsList"></ul>
-        </div>
-        <form id="appointModForm">
-          <input type="text" name="username" placeholder="Nutzername für Moderator" required>
-          <button type="submit">Moderator ernennen</button>
-        </form>
-      </section>
-      
-      <!-- Medien-Update -->
+      <div id="userListContainer">
+        <div id="userList"></div>
+        <button id="toggleUsers" class="hidden">Mehr anzeigen</button>
+      </div>
+
+      <!-- Button zum Öffnen des modalen Medien-Update-Fensters -->
       <section id="mediaUpdateToggleSection">
-        <button id="openMediaModal">Medien aktualisieren</button>
+        <button id="openMediaModal">Change Videos and Pictures</button>
       </section>
     </section>
     

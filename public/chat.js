@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentChannel = null;
   let pollingInterval = null;
   let isAdmin = false;
-  let isModerator = false;
-  let currentUsername = ''; // Wird beim Login/Initialisieren gesetzt
   const messageLimit = 30; // Limit für die Pagination
 
   // DOM-Elemente
@@ -16,26 +14,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatContainer = document.getElementById('chatContainer');
   const messageForm = document.getElementById('messageForm');
   const messageInput = document.getElementById('messageInput');
-  const imageForm = document.getElementById('imageForm'); // Bild-Upload (nur für Admins)
+  const imageForm = document.getElementById('imageForm'); // Bild-Upload-Formular (HTML hat initial "hidden")
   const imageInput = document.getElementById('imageInput');
-  const moderatorsPanel = document.getElementById('moderatorsPanel'); // Neuer Bereich für Moderatoren
-  const moderatorsList = document.getElementById('moderatorsList');
-  const appointModForm = document.getElementById('appointModForm'); // Formular zur Ernennung
 
-  // Initialisiert den Chat und holt Userinfo
+  // Initialisiert den Chat und prüft, ob der User eingeloggt ist
   async function initializeChat() {
     try {
+      // Userinfo abrufen
       const userinfoRes = await fetch('/api/userinfo');
       if (userinfoRes.ok) {
         const userinfo = await userinfoRes.json();
-        currentUsername = userinfo.username;
-        isAdmin = userinfo.role === 'admin';
-        isModerator = userinfo.role === 'moderator';
-        // Falls Admin: Zeige Bild-Upload und Moderatoren-Panel
-        if (isAdmin) {
+        isAdmin = Boolean(userinfo.isAdmin);
+        // Falls Admin, entferne die "hidden"-Klasse vom Bild-Upload-Formular
+        if (isAdmin && imageForm) {
           imageForm.classList.remove('hidden');
-          moderatorsPanel.classList.remove('hidden');
-          loadModerators();
         }
       }
       // Kanäle laden
@@ -53,60 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(error);
       loginSection.classList.remove('hidden');
       chatInterface.classList.add('hidden');
-    }
-  }
-
-  // Lädt Moderatoren, die der eingeloggte Admin ernannt hat
-  async function loadModerators() {
-    try {
-      const res = await fetch('/api/admin/moderators');
-      if (res.ok) {
-        const mods = await res.json();
-        renderModerators(mods);
-      } else {
-        moderatorsList.innerHTML = `<li>Fehler beim Laden der Moderatoren</li>`;
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  // Rendert die Liste der Moderatoren im Panel
-  function renderModerators(mods) {
-    moderatorsList.innerHTML = '';
-    if (mods.length === 0) {
-      moderatorsList.innerHTML = `<li>Keine Moderatoren ernannt</li>`;
-      return;
-    }
-    mods.forEach(mod => {
-      const li = document.createElement('li');
-      li.textContent = mod.username;
-      const removeBtn = document.createElement('button');
-      removeBtn.textContent = 'Entfernen';
-      removeBtn.addEventListener('click', () => removeModerator(mod.username));
-      li.appendChild(removeBtn);
-      moderatorsList.appendChild(li);
-    });
-  }
-
-  // Entfernt einen Moderator (nur Admins)
-  async function removeModerator(username) {
-    if (!confirm(`Moderator ${username} wirklich entfernen?`)) return;
-    try {
-      const res = await fetch('/api/admin/removeModerator', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })
-      });
-      const result = await res.json();
-      if (res.ok) {
-        alert(result.message);
-        loadModerators();
-      } else {
-        alert(result.message);
-      }
-    } catch (error) {
-      console.error(error);
     }
   }
 
@@ -128,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Lädt den Chat-Inhalt eines Kanals
+  // Lädt den Chat-Inhalt eines bestimmten Kanals (nur die neuesten 30 Nachrichten)
   async function loadChat(channel) {
     try {
       const res = await fetch(`/api/chats/${encodeURIComponent(channel)}?limit=${messageLimit}`);
@@ -144,35 +82,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Rendert Nachrichten im Chat
+  // Rendert die Nachrichten im Chat.
+  // Bei replace === true wird der Container neu aufgebaut und der Scrollzustand relativ angepasst.
+  // Bei replace === false (beim Nachladen älterer Nachrichten) werden die neuen Nachrichten oben eingefügt.
   function renderMessages(messages, replace = false) {
     if (replace) {
-      const threshold = 50;
+      const threshold = 50; // Pixel, um zu bestimmen, ob der Nutzer nahe dem unteren Rand ist
       const previousScrollTop = chatContainer.scrollTop;
       const previousScrollHeight = chatContainer.scrollHeight;
       const isAtBottom = previousScrollTop + chatContainer.clientHeight >= previousScrollHeight - threshold;
+
       chatContainer.innerHTML = '';
       messages.forEach(msg => {
         const div = document.createElement('div');
         div.classList.add('message');
         div.setAttribute('data-timestamp', msg.timestamp);
+
         const meta = document.createElement('span');
         meta.classList.add('meta');
-        if (msg.role === 'admin') {
+        if (msg.isAdmin) {
           meta.textContent = `Admin: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
           div.classList.add('admin');
-        } else if (msg.role === 'moderator') {
-          meta.textContent = `Moderator: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
-          div.classList.add('moderator');
         } else {
           meta.textContent = `User: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
         }
         div.appendChild(meta);
+
         if (msg.message) {
           const text = document.createElement('span');
           text.textContent = `: ${msg.message}`;
           div.appendChild(text);
         }
+
         if (msg.image) {
           const img = document.createElement('img');
           img.src = '/pictures/' + msg.image;
@@ -182,7 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
           img.style.marginTop = '5px';
           div.appendChild(img);
         }
-        // Eigene Nachricht oder wenn Admin kann Löschen
+
+        const currentUsername = getCookie('username');
         if (msg.user === currentUsername || isAdmin) {
           const delBtn = document.createElement('button');
           delBtn.classList.add('deleteBtn');
@@ -190,31 +132,18 @@ document.addEventListener('DOMContentLoaded', () => {
           delBtn.addEventListener('click', () => deleteMessage(currentChannel, msg.id));
           div.appendChild(delBtn);
         }
-        // Moderator-Funktionen: Nur wenn eingeloggt als Moderator (aber nicht eigene Nachricht)
-        if (isModerator && msg.user !== currentUsername && msg.role === 'user') {
-          const muteBtn = document.createElement('button');
-          muteBtn.classList.add('banBtn');
-          // Je nach Muted-Status
-          muteBtn.textContent = msg.muted ? 'Entstummt' : 'Stummschalten';
-          muteBtn.addEventListener('click', () => toggleMute(msg.user, msg.muted));
-          div.appendChild(muteBtn);
-          // Moderatoren dürfen auch löschen (nur von normalen Usern)
-          const delBtn = document.createElement('button');
-          delBtn.classList.add('deleteBtn');
-          delBtn.textContent = 'Löschen';
-          delBtn.addEventListener('click', () => deleteMessage(currentChannel, msg.id));
-          div.appendChild(delBtn);
-        }
-        // Admins können zusätzlich "Bannen" (hier nicht im UI für Moderatoren)
-        if (isAdmin && msg.user !== currentUsername && msg.role === 'user') {
+
+        if (isAdmin && msg.user !== currentUsername) {
           const banBtn = document.createElement('button');
           banBtn.classList.add('banBtn');
-          banBtn.textContent = 'Bannen';
+          banBtn.textContent = 'Benutzer bannen';
           banBtn.addEventListener('click', () => banUser(msg.user));
           div.appendChild(banBtn);
         }
+
         chatContainer.appendChild(div);
       });
+
       const newScrollHeight = chatContainer.scrollHeight;
       if (isAtBottom) {
         chatContainer.scrollTop = newScrollHeight;
@@ -226,23 +155,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.classList.add('message');
         div.setAttribute('data-timestamp', msg.timestamp);
+
         const meta = document.createElement('span');
         meta.classList.add('meta');
-        if (msg.role === 'admin') {
+        if (msg.isAdmin) {
           meta.textContent = `Admin: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
           div.classList.add('admin');
-        } else if (msg.role === 'moderator') {
-          meta.textContent = `Moderator: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
-          div.classList.add('moderator');
         } else {
           meta.textContent = `User: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
         }
         div.appendChild(meta);
+
         if (msg.message) {
           const text = document.createElement('span');
           text.textContent = `: ${msg.message}`;
           div.appendChild(text);
         }
+
         if (msg.image) {
           const img = document.createElement('img');
           img.src = '/pictures/' + msg.image;
@@ -252,6 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
           img.style.marginTop = '5px';
           div.appendChild(img);
         }
+
+        const currentUsername = getCookie('username');
         if (msg.user === currentUsername || isAdmin) {
           const delBtn = document.createElement('button');
           delBtn.classList.add('deleteBtn');
@@ -259,28 +190,26 @@ document.addEventListener('DOMContentLoaded', () => {
           delBtn.addEventListener('click', () => deleteMessage(currentChannel, msg.id));
           div.appendChild(delBtn);
         }
-        if (isModerator && msg.user !== currentUsername && msg.role === 'user') {
-          const muteBtn = document.createElement('button');
-          muteBtn.classList.add('banBtn');
-          muteBtn.textContent = msg.muted ? 'Entstummt' : 'Stummschalten';
-          muteBtn.addEventListener('click', () => toggleMute(msg.user, msg.muted));
-          div.appendChild(muteBtn);
-          const delBtn = document.createElement('button');
-          delBtn.classList.add('deleteBtn');
-          delBtn.textContent = 'Löschen';
-          delBtn.addEventListener('click', () => deleteMessage(currentChannel, msg.id));
-          div.appendChild(delBtn);
+
+        if (isAdmin && msg.user !== currentUsername) {
+          const banBtn = document.createElement('button');
+          banBtn.classList.add('banBtn');
+          banBtn.textContent = 'Benutzer bannen';
+          banBtn.addEventListener('click', () => banUser(msg.user));
+          div.appendChild(banBtn);
         }
+
         chatContainer.insertBefore(div, chatContainer.firstChild);
       });
     }
   }
 
-  // Lädt ältere Nachrichten, wenn oben gescrollt wird
+  // Lädt ältere Nachrichten, wenn der User oben scrollt
   async function loadOlderMessages() {
     const firstMsgElement = chatContainer.firstElementChild;
     if (!firstMsgElement) return;
     const firstTimestamp = firstMsgElement.getAttribute('data-timestamp');
+
     try {
       const res = await fetch(
         `/api/chats/${encodeURIComponent(currentChannel)}?limit=${messageLimit}&olderThan=${firstTimestamp}`
@@ -298,12 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Scroll-Event: Lädt ältere Nachrichten, wenn der Nutzer den oberen Rand erreicht
   chatContainer.addEventListener('scroll', () => {
     if (chatContainer.scrollTop === 0) {
       loadOlderMessages();
     }
   });
 
+  // Startet das Polling für den aktuellen Chat – hier nur, wenn der Nutzer nahe dem unteren Rand ist
   function startPolling() {
     if (pollingInterval) clearInterval(pollingInterval);
     if (currentChannel) {
@@ -316,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Löscht eine Nachricht via API
   async function deleteMessage(channel, messageId) {
     try {
       const res = await fetch(`/api/chats/${encodeURIComponent(channel)}`, {
@@ -334,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Bann-Funktion (nur Admins)
+  // Bann-Funktion für Admins
   async function banUser(username) {
     try {
       const res = await fetch('/api/admin/ban', {
@@ -353,28 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Mute/Unmute-Funktion (Admin und Moderator)
-  async function toggleMute(username, currentlyMuted) {
-    const endpoint = currentlyMuted ? '/api/moderate/unmute' : '/api/moderate/mute';
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        alert(result.message);
-      } else {
-        alert(result.message);
-        loadChat(currentChannel);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  // Bild-Upload (nur Admins)
+  // Bild-Upload: Nur Admins können Bilder hochladen
   if (imageForm) {
     imageForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -407,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Nachrichtenformular
+  // Event-Listener für das Nachrichtenformular
   if (messageForm) {
     messageForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -436,33 +347,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Formular für Moderator-Ernennung (nur Admins)
-  if (appointModForm) {
-    appointModForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(appointModForm);
-      const data = Object.fromEntries(formData.entries());
-      try {
-        const res = await fetch('/api/admin/appointModerator', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        if (res.ok) {
-          alert(result.message);
-          appointModForm.reset();
-          loadModerators();
-        } else {
-          alert(result.message);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    });
+  // Hilfsfunktion zum Auslesen von Cookies
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
   }
 
-  // Login-Formular
+  // Login-Formular absenden
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -476,8 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const result = await res.json();
         if (res.ok) {
-          isAdmin = result.role === 'admin';
-          isModerator = result.role === 'moderator';
+          isAdmin = Boolean(result.isAdmin);
           initializeChat();
         } else {
           alert(result.message);
@@ -495,6 +386,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/logout', { method: 'POST' });
         const result = await res.json();
         alert(result.message);
+        document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        document.cookie = 'password=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
         window.location.href = 'main.html';
       } catch (error) {
         console.error(error);
@@ -509,9 +402,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Chat initialisieren und Polling starten
   initializeChat();
   startPolling();
 
+  // Beim Kanalwechsel das Polling neu starten
   const originalLoadChat = loadChat;
   loadChat = async (channel) => {
     await originalLoadChat(channel);

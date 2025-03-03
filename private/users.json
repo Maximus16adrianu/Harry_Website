@@ -4,8 +4,6 @@
     "password": "1234",
     "requestedAt": "2025-03-02T22:06:59.491Z",
     "isAdmin": false,
-    "locked": false,
-    "role": "user",
-    "muted": false
+    "locked": false
   }
 ]
