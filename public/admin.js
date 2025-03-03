@@ -1,11 +1,42 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Event Listener für den Admin-API-Key Login
+  const adminLoginForm = document.getElementById('adminLoginForm');
+  const adminLoginSection = document.getElementById('adminLoginSection');
+  const adminPanel = document.getElementById('adminPanel');
+  if (adminLoginForm) {
+    adminLoginForm.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Standardformular-Submit unterbinden
+      const formData = new FormData(adminLoginForm);
+      const apiKey = formData.get('apiKey');
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          // Bei erfolgreichem Login: Admin-Login-Bereich ausblenden, Admin-Panel anzeigen
+          adminLoginSection.classList.add('hidden');
+          adminPanel.classList.remove('hidden');
+        } else {
+          alert(data.message || 'Fehler beim Admin-Login');
+        }
+      } catch (error) {
+        console.error('Fehler beim Admin-Login:', error);
+        alert('Fehler beim Admin-Login');
+      }
+    });
+  }
+
+  // Der restliche Code (Chat-Interface etc.) bleibt unverändert
   let currentChannel = null;
   let pollingInterval = null;
   let isAdmin = false;
   let currentUsername = ''; // Globaler Username, der beim Login/Initialisieren gesetzt wird
   const messageLimit = 30; // Limit für die Pagination
 
-  // DOM-Elemente
+  // DOM-Elemente für den Chat
   const loginSection = document.getElementById('loginSection');
   const chatInterface = document.getElementById('chatInterface');
   const loginForm = document.getElementById('loginForm');
@@ -348,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Login-Formular absenden
+  // Login-Formular absenden (für normale Nutzer)
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();

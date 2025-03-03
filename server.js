@@ -7,6 +7,9 @@ const multer = require('multer');
 const app = express();
 const PORT = 3000;
 
+// API-Key Definition
+const ADMIN_API_KEY = '1234';
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -70,7 +73,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: function (req, file, cb) {
-    // Nur Admins (und ggf. Moderatoren) dürfen Bilder hochladen – hier gilt: Nur Admins haben diese Option
+    // Nur Admins dürfen Bilder hochladen
     if (req.user && req.user.role === 'admin') {
       cb(null, true);
     } else {
@@ -84,9 +87,30 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/pictures', express.static(picturesDir));
 
 /* ---------------------------
+   Neuer Endpunkt: Admin-Login via API-Key
+----------------------------*/
+app.post('/api/admin/login', (req, res) => {
+  const { apiKey } = req.body;
+  if (apiKey === ADMIN_API_KEY) {
+    // Setze ein Cookie, das von der Auth-Middleware geprüft wird
+    res.cookie('adminApiKey', apiKey, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+    return res.json({ message: 'Erfolgreich als Admin eingeloggt', isAdmin: true });
+  } else {
+    return res.status(401).json({ message: 'Ungültiger API-Key' });
+  }
+});
+
+/* ---------------------------
    Middleware: Auth (inkl. Rollen)
 ----------------------------*/
 function authMiddleware(req, res, next) {
+  // Zuerst prüfen wir, ob ein gültiges adminApiKey-Cookie vorhanden ist
+  const { adminApiKey } = req.cookies;
+  if (adminApiKey && adminApiKey === ADMIN_API_KEY) {
+    req.user = { username: 'admin', password: ADMIN_API_KEY, role: 'admin' };
+    return next();
+  }
+
   const { username, password } = req.cookies;
   if (!username || !password) {
     return res.status(401).json({ message: 'Nicht eingeloggt' });
@@ -185,6 +209,7 @@ app.post('/api/login', (req, res) => {
 app.post('/api/logout', (req, res) => {
   res.clearCookie('username');
   res.clearCookie('password');
+  res.clearCookie('adminApiKey');
   res.json({ message: 'Erfolgreich ausgeloggt' });
 });
 
@@ -409,9 +434,7 @@ app.delete('/api/chats/:chatName', authMiddleware, (req, res) => {
 
   // Eigene Nachricht kann jeder löschen.
   if (msg.user !== req.user.username) {
-    // Admins dürfen alles löschen.
     if (req.user.role === 'moderator') {
-      // Moderatoren dürfen nur Nachrichten von normalen Nutzern löschen.
       const normalUsers = readJSON(usersFile);
       const targetNormal = normalUsers.find(u => u.username === msg.user);
       if (!targetNormal) {
@@ -429,7 +452,6 @@ app.delete('/api/chats/:chatName', authMiddleware, (req, res) => {
 
 /* ---------------------------
    Moderator-Endpunkte (Mute/Unmute)
-   Nur Admins und Moderatoren dürfen Nutzer stummschalten – jedoch nur, wenn diese normale Nutzer sind.
 ----------------------------*/
 app.post('/api/moderate/mute', authMiddleware, (req, res) => {
   if (req.user.role !== 'admin' && req.user.role !== 'moderator') {
@@ -467,8 +489,6 @@ app.post('/api/moderate/unmute', authMiddleware, (req, res) => {
 
 /* ---------------------------
    Admin-Endpunkte für Moderatoren
-   - Moderatoren ernennen und entfernen
-   - Liste der Moderatoren abrufen
 ----------------------------*/
 app.post('/api/admin/appointModerator', authMiddleware, (req, res) => {
   if (req.user.role !== 'admin') {
@@ -481,7 +501,6 @@ app.post('/api/admin/appointModerator', authMiddleware, (req, res) => {
   if (!target) {
     return res.status(404).json({ message: 'Nutzer nicht gefunden oder ist kein normaler Nutzer.' });
   }
-  // Entferne aus users.json
   users = users.filter(u => u.username !== username);
   writeJSON(usersFile, users);
   let moderators = readJSON(moderatorsFile);
@@ -509,7 +528,6 @@ app.post('/api/admin/removeModerator', authMiddleware, (req, res) => {
   if (!target) {
     return res.status(404).json({ message: 'Moderator nicht gefunden.' });
   }
-  // Hier wird die ursprüngliche Prüfbedingung entfernt, sodass jeder Admin Moderatoren entfernen kann.
   moderators = moderators.filter(m => m.username !== username);
   writeJSON(moderatorsFile, moderators);
   let users = readJSON(usersFile);
@@ -536,11 +554,9 @@ app.post('/api/admin/promoteModerator', authMiddleware, (req, res) => {
   if (!target) {
     return res.status(404).json({ message: 'Moderator nicht gefunden.' });
   }
-  // Entferne aus moderators.json
   moderators = moderators.filter(m => m.username !== username);
   writeJSON(moderatorsFile, moderators);
   
-  // Füge zum admins.json hinzu
   let admins = readJSON(adminsFile);
   target.role = 'admin';
   delete target.appointedBy;
@@ -561,11 +577,9 @@ app.post('/api/admin/demoteModerator', authMiddleware, (req, res) => {
   if (!target) {
     return res.status(404).json({ message: 'Moderator nicht gefunden.' });
   }
-  // Entferne aus moderators.json
   moderators = moderators.filter(m => m.username !== username);
   writeJSON(moderatorsFile, moderators);
   
-  // Füge zum users.json hinzu
   let users = readJSON(usersFile);
   target.role = 'user';
   delete target.appointedBy;
