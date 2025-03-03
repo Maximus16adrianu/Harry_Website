@@ -8,35 +8,41 @@ document.addEventListener("DOMContentLoaded", function () {
   const galleryImage = document.getElementById('gallery-image');
 
   function updateGallery() {
-    galleryImage.style.opacity = 0;
-    setTimeout(() => {
-      galleryImage.src = images[currentIndex];
-      galleryImage.style.opacity = 1;
-    }, 300);
+    if (galleryImage) {
+      galleryImage.style.opacity = 0;
+      setTimeout(() => {
+        galleryImage.src = images[currentIndex];
+        galleryImage.style.opacity = 1;
+      }, 300);
+    }
   }
 
-  document.getElementById('prev').addEventListener('click', () => {
-    currentIndex = (currentIndex - 1 + images.length) % images.length;
-    updateGallery();
-  });
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  if (prevBtn && nextBtn) {
+    prevBtn.addEventListener('click', () => {
+      currentIndex = (currentIndex - 1 + images.length) % images.length;
+      updateGallery();
+    });
 
-  document.getElementById('next').addEventListener('click', () => {
-    currentIndex = (currentIndex + 1) % images.length;
-    updateGallery();
-  });
+    nextBtn.addEventListener('click', () => {
+      currentIndex = (currentIndex + 1) % images.length;
+      updateGallery();
+    });
+  }
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'ArrowLeft') {
-      document.getElementById('prev').click();
-    } else if (e.key === 'ArrowRight') {
-      document.getElementById('next').click();
+    if (e.key === 'ArrowLeft' && prevBtn) {
+      prevBtn.click();
+    } else if (e.key === 'ArrowRight' && nextBtn) {
+      nextBtn.click();
     }
   });
 
   // Video-Autoplay-Handling
   document.addEventListener("click", function () {
     const video = document.getElementById("intro-video");
-    if (video.paused) {
+    if (video && video.paused) {
       video.play().then(() => {
         video.muted = false;
       }).catch(error => {
@@ -67,7 +73,20 @@ document.addEventListener("DOMContentLoaded", function () {
   // Mobile Menü-Toggle
   const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
   const mobileNav = document.querySelector('.mobile-nav');
-  mobileMenuBtn.addEventListener('click', function () {
-    mobileNav.classList.toggle('active');
-  });
+  if (mobileMenuBtn && mobileNav) {
+    mobileMenuBtn.addEventListener('click', function () {
+      mobileNav.classList.toggle('active');
+    });
+  }
+});
+
+// Falls das Browserfenster von Mobil- zu PC-Ansicht wechselt,
+// wird die mobile Navigation (falls geöffnet) automatisch geschlossen.
+window.addEventListener("resize", function() {
+  if (window.innerWidth > 768) {
+    const mobileNav = document.getElementById("mobileNav");
+    if (mobileNav) {
+      mobileNav.classList.remove("active");
+    }
+  }
 });
