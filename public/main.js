@@ -1,3 +1,9 @@
+// Globale Funktion, die vom Hamburger-Button (Inline-Handler) aufgerufen wird
+function toggleMobileNav(event) {
+  if (event) event.stopPropagation();
+  document.getElementById("mobileNav").classList.toggle("active");
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   // Galerie-Funktionalität
   const images = [];
@@ -24,7 +30,6 @@ document.addEventListener("DOMContentLoaded", function () {
       currentIndex = (currentIndex - 1 + images.length) % images.length;
       updateGallery();
     });
-
     nextBtn.addEventListener('click', () => {
       currentIndex = (currentIndex + 1) % images.length;
       updateGallery();
@@ -70,23 +75,25 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Mobile Menü-Toggle
-  const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-  const mobileNav = document.querySelector('.mobile-nav');
-  if (mobileMenuBtn && mobileNav) {
-    mobileMenuBtn.addEventListener('click', function () {
-      mobileNav.classList.toggle('active');
-    });
-  }
-});
-
-// Falls das Browserfenster von Mobil- zu PC-Ansicht wechselt,
-// wird die mobile Navigation (falls geöffnet) automatisch geschlossen.
-window.addEventListener("resize", function() {
-  if (window.innerWidth > 768) {
+  // "Click Outside" – Schließt das mobile Menü, wenn außerhalb geklickt wird
+  document.addEventListener('click', function(e) {
     const mobileNav = document.getElementById("mobileNav");
-    if (mobileNav) {
-      mobileNav.classList.remove("active");
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    if (mobileNav.classList.contains('active')) {
+      if (!mobileNav.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+        mobileNav.classList.remove('active');
+      }
     }
-  }
+  });
+
+  // Falls das Browserfenster von Mobil- zu PC-Ansicht wechselt,
+  // wird die mobile Navigation (falls geöffnet) automatisch geschlossen.
+  window.addEventListener("resize", function() {
+    if (window.innerWidth > 768) {
+      const mobileNav = document.getElementById("mobileNav");
+      if (mobileNav) {
+        mobileNav.classList.remove("active");
+      }
+    }
+  });
 });

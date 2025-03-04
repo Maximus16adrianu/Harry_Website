@@ -9,7 +9,8 @@
 </head>
 <body>
   <header>
-    <button class="mobile-menu-btn" onclick="toggleMobileNav()">&#9776;</button>
+    <!-- Der Hamburger-Button ruft die globale Funktion toggleMobileNav() auf -->
+    <button class="mobile-menu-btn" onclick="toggleMobileNav(event)">&#9776;</button>
     <h1>Großdemo in allen 16 Bundesländern</h1>
   </header>
 
@@ -17,6 +18,7 @@
   <nav class="mobile-nav" id="mobileNav">
     <ul>
       <li class="admin-item"><a href="admin.html">Admin</a></li>
+      <li class="admin-item"><a href="orga.html">Orga</a></li>
       <li><a href="#section1">Willkommen</a></li>
       <li><a href="#section2">Bilder</a></li>
       <li><a href="#footer">Kontakt</a></li>
