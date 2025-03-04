@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleRequestsBtn = document.getElementById('toggleRequests');
   const userListDiv = document.getElementById('userList');
   const toggleUsersBtn = document.getElementById('toggleUsers');
-  
+  const orgaListDiv = document.getElementById('orgaList');
+
   const filterUsernameInput = document.getElementById('filterUsername');
   const filterBannedSelect = document.getElementById('filterBanned');
   const filterAdminSelect = document.getElementById('filterAdmin');
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let requestListExpanded = false;
   let fullUserList = [];
   let userListExpanded = false;
+  let fullOrgaList = [];
   
   // API-Key Login
   const loginForm = document.getElementById('adminLoginForm');
@@ -36,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
       adminPanel.classList.remove('hidden');
       loadRequests();
       loadUsers();
+      loadOrgas();
     } catch (err) {
       console.error(err);
       alert('Fehler beim Prüfen des API Keys');
@@ -70,8 +73,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
+  // Orga-Konten laden
+  async function loadOrgas() {
+    try {
+      const res = await fetch('/api/admin/orgas?apiKey=' + encodeURIComponent(currentApiKey));
+      if (res.ok) {
+        fullOrgaList = await res.json();
+        renderOrgaList();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  
   // Rendern der Request-Liste (mit Expand/Collapse)
   function renderRequestList() {
+    // Zähler aktualisieren
+    document.getElementById('requestCount').textContent = fullRequestList.length;
     requestListDiv.innerHTML = '';
     const listToRender = requestListExpanded ? fullRequestList : fullRequestList.slice(0, 10);
     listToRender.forEach(req => {
@@ -126,6 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Rendern der Nutzerliste (mit Expand/Collapse und Filter)
   function renderUserList() {
+    // Zähler aktualisieren
+    document.getElementById('userCount').textContent = fullUserList.length;
     userListDiv.innerHTML = '';
     const filtered = filterUserList(fullUserList);
     const listToRender = userListExpanded ? filtered : filtered.slice(0, 10);
@@ -172,7 +192,59 @@ document.addEventListener('DOMContentLoaded', () => {
     renderUserList();
   });
   
-  // Globale Funktionen für Admin-Operationen (über window, damit onClick im HTML funktioniert)
+  // Rendern der Orga-Liste im Popup
+  function renderOrgaList() {
+    orgaListDiv.innerHTML = '';
+    fullOrgaList.forEach(orga => {
+      const div = document.createElement('div');
+      div.className = 'orga-item';
+      div.innerHTML = `
+        <strong>${orga.username}</strong> (${orga.bundesland})
+        <div class="orga-actions">
+          <button onclick="editOrga('${orga.username}')">Bearbeiten</button>
+          <button class="danger" onclick="deleteOrga('${orga.username}')">Löschen</button>
+        </div>
+      `;
+      orgaListDiv.appendChild(div);
+    });
+  }
+  
+  // Event Listener für das Öffnen des Orga-Popups
+  const openOrgaPopupBtn = document.getElementById('openOrgaPopupBtn');
+  const orgaPopupModal = document.getElementById('orgaPopupModal');
+  const closeOrgaPopup = document.getElementById('closeOrgaPopup');
+  openOrgaPopupBtn.addEventListener('click', () => {
+    orgaPopupModal.style.display = 'flex';
+    loadOrgas();
+  });
+  // Schließen des Orga-Popups (durch Klick auf Schließen-Button)
+  closeOrgaPopup.addEventListener('click', () => {
+    orgaPopupModal.style.display = 'none';
+  });
+  
+  // Event Listener für das Erstellen eines neuen Orga-Kontos
+  const orgaCreateForm = document.getElementById('orgaCreateForm');
+  orgaCreateForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('orgaUsernameInput').value;
+    const password = document.getElementById('orgaPasswordInput').value;
+    const bundesland = document.getElementById('orgaBundeslandSelect').value;
+    try {
+      const res = await fetch('/api/admin/orgas/create?apiKey=' + encodeURIComponent(currentApiKey), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, bundesland })
+      });
+      const result = await res.json();
+      alert(result.message);
+      orgaCreateForm.reset();
+      loadOrgas();
+    } catch (err) {
+      console.error(err);
+    }
+  });
+  
+  // Globale Funktionen für Admin-Operationen (über window)
   window.approveRequest = async (username) => {
     try {
       const res = await fetch('/api/admin/approve?apiKey=' + encodeURIComponent(currentApiKey), {
@@ -262,6 +334,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Globale Funktionen für Orga-Konten Bearbeitung
+  window.editOrga = async (username) => {
+    // Öffne das Bearbeitungs-Popup und fülle die Felder
+    document.getElementById('orgaEditUsername').value = username;
+    // Setze evtl. vorhandene Werte (hier aus fullOrgaList)
+    const orga = fullOrgaList.find(o => o.username === username);
+    if (orga) {
+      document.getElementById('orgaEditPassword').value = orga.password;
+      document.getElementById('orgaEditBundesland').value = orga.bundesland;
+    }
+    document.getElementById('orgaEditModal').style.display = 'flex';
+  };
+
+  window.deleteOrga = async (username) => {
+    if (!confirm(`Soll das Orga-Konto ${username} wirklich gelöscht werden?`)) return;
+    try {
+      const res = await fetch('/api/admin/orgas/' + encodeURIComponent(username) + '?apiKey=' + encodeURIComponent(currentApiKey), {
+        method: 'DELETE'
+      });
+      const result = await res.json();
+      alert(result.message);
+      loadOrgas();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Event Listener für das Orga-Bearbeitungs-Popup
+  const orgaEditModal = document.getElementById('orgaEditModal');
+  const closeOrgaEditModal = document.getElementById('closeOrgaEditModal');
+  const orgaEditForm = document.getElementById('orgaEditForm');
+  closeOrgaEditModal.addEventListener('click', () => {
+    orgaEditModal.style.display = 'none';
+  });
+  orgaEditForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('orgaEditUsername').value;
+    const password = document.getElementById('orgaEditPassword').value;
+    const bundesland = document.getElementById('orgaEditBundesland').value;
+    try {
+      const res = await fetch('/api/admin/orgas/' + encodeURIComponent(username) + '?apiKey=' + encodeURIComponent(currentApiKey), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, bundesland })
+      });
+      const result = await res.json();
+      alert(result.message);
+      orgaEditModal.style.display = 'none';
+      loadOrgas();
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
   // Modal-Logik für den Medien-Update-Bereich
   const openMediaModalBtn = document.getElementById('openMediaModal');
   const mediaModal = document.getElementById('mediaUpdateModal');
@@ -279,6 +405,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('click', (e) => {
     if (e.target === mediaModal) {
       mediaModal.style.display = 'none';
+    }
+    if (e.target === document.getElementById('orgaPopupModal')) {
+      document.getElementById('orgaPopupModal').style.display = 'none';
     }
   });
 

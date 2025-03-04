@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let pollingInterval = null;
   let isAdmin = false;
   const messageLimit = 30; // Limit für die Pagination
+  let lastMessageTimestamp = null; // Zeitstempel der letzten Nachricht
 
   // DOM-Elemente
   const loginSection = document.getElementById('loginSection');
@@ -59,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       btn.addEventListener('click', () => {
         currentChannel = channel;
+        lastMessageTimestamp = null; // Reset beim Kanalwechsel
         renderChannels(channels);
         loadChat(channel);
       });
@@ -72,6 +74,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch(`/api/chats/${encodeURIComponent(channel)}?limit=${messageLimit}`);
       if (res.ok) {
         const messages = await res.json();
+        // Falls bereits Nachrichten vorhanden sind, prüfen ob es neue gibt
+        if (messages.length > 0) {
+          const newestTimestamp = messages[messages.length - 1].timestamp;
+          if (lastMessageTimestamp === newestTimestamp) {
+            return; // Es gibt keine neuen Nachrichten, also abbrechen
+          }
+          lastMessageTimestamp = newestTimestamp;
+        }
         renderMessages(messages, true);
       } else {
         chatContainer.innerHTML = `<p>Fehler: ${await res.text()}</p>`;

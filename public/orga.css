@@ -1,0 +1,215 @@
+/* Globale Einstellungen */
+* {
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #eef2f3;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Container Styles – zentral und responsiv */
+  #login-container, 
+  #chat-container, 
+  #pinned-container {
+    max-width: 600px;
+    width: 95%;
+    margin: 20px auto;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  
+  /* Überschriften */
+  h2 {
+    text-align: center;
+  }
+  
+  /* Formulare */
+  form {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+  }
+  
+  label {
+    margin-top: 10px;
+  }
+  
+  input[type="text"],
+  input[type="password"],
+  input[type="file"] {
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  button {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #4285f4;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  button:hover {
+    background-color: #357ae8;
+  }
+  
+  .error {
+    color: red;
+    text-align: center;
+  }
+  
+  /* Chat Header */
+  #chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  #header-buttons button {
+    margin-left: 5px;
+  }
+  
+  /* Chat Nachrichten */
+  #chat-messages {
+    height: 400px;
+    overflow-y: scroll;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background-color: #fafafa;
+    margin: 15px 0;
+  }
+  
+  .message {
+    margin-bottom: 10px;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+  }
+  
+  .message img {
+    max-width: 100%;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    margin-top: 5px;
+  }
+  
+  /* Button zum anpinnen */
+  .pin-btn {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    background-color: #f4b400;
+    color: #fff;
+    border: none;
+    padding: 5px;
+    font-size: 0.8em;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .pin-btn:hover {
+    background-color: #d99a00;
+  }
+  
+  .timestamp {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+  }
+  
+  /* Modal für Bildvergrößerung */
+  .modal {
+    display: none; 
+    position: fixed; 
+    z-index: 100;
+    padding-top: 60px; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%;
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.9);
+  }
+  
+  .modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 80%;
+  }
+  
+  #close-modal {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  /* Angepinnte Nachrichten Container */
+  #pinned-container {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 600px;
+    background-color: #fff;
+    border: 2px solid #4285f4;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    z-index: 200;
+    padding: 15px;
+  }
+  
+  #pinned-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  #pinned-messages {
+    max-height: 300px;
+    overflow-y: auto;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+  }
+  
+  /* Responsive Anpassungen für mobile Geräte */
+  @media (max-width: 600px) {
+    #chat-messages {
+      height: 250px;
+    }
+    
+    #login-container, #chat-container, #pinned-container {
+      margin: 10px auto;
+      padding: 10px;
+    }
+    
+    button {
+      padding: 8px;
+      font-size: 0.9rem;
+    }
+    
+    input[type="text"],
+    input[type="password"],
+    input[type="file"] {
+      padding: 8px;
+      font-size: 0.9rem;
+    }
+  }
+  

@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Bereich</title>
   <link rel="stylesheet" href="admin.css">
 </head>
@@ -21,13 +22,13 @@
     
     <!-- Admin Panel -->
     <section id="adminPanel" class="hidden">
-      <h2>Registrierungsanfragen</h2>
+      <h2>Registrierungsanfragen (<span id="requestCount">0</span>)</h2>
       <div id="requestListContainer">
         <div id="requestList"></div>
         <button id="toggleRequests" class="hidden">Mehr anzeigen</button>
       </div>
       
-      <h2>Registrierte Nutzer</h2>
+      <h2>Registrierte Nutzer (<span id="userCount">0</span>)</h2>
       <section id="userFilterSection">
         <label for="filterUsername">Benutzername:</label>
         <input type="text" id="filterUsername" placeholder="Nach Namen filtern">
@@ -54,6 +55,11 @@
         <button id="toggleUsers" class="hidden">Mehr anzeigen</button>
       </div>
 
+      <!-- Button zum Öffnen des Orga-Popups -->
+      <section id="orgaPopupToggleSection">
+        <button id="openOrgaPopupBtn">Orga-Konten verwalten</button>
+      </section>
+      
       <!-- Button zum Öffnen des modalen Medien-Update-Fensters -->
       <section id="mediaUpdateToggleSection">
         <button id="openMediaModal">Ändere Videos und Bilder</button>
@@ -61,7 +67,7 @@
     </section>
     
     <!-- Modal Fenster für Medien-Update -->
-    <div id="mediaUpdateModal" class="hidden">
+    <div id="mediaUpdateModal" class="hidden modal">
       <div class="modal-content">
         <button id="closeMediaModal" class="modal-close-button">&times;</button>
         <h2>Medien aktualisieren</h2>
@@ -87,6 +93,85 @@
         </form>
       </div>
     </div>
+    
+    <!-- Modal Fenster für Orga-Konten Verwaltung -->
+    <div id="orgaPopupModal" class="hidden modal">
+      <div class="modal-content">
+        <button id="closeOrgaPopup" class="modal-close-button">&times;</button>
+        <h2>Orga-Konten verwalten</h2>
+        
+        <!-- Formular zur Erstellung eines neuen Orga-Kontos -->
+        <form id="orgaCreateForm">
+          <h3>Neues Orga-Konto erstellen</h3>
+          <label for="orgaUsernameInput">Benutzername:</label>
+          <input type="text" id="orgaUsernameInput" required>
+          <label for="orgaPasswordInput">Passwort:</label>
+          <input type="text" id="orgaPasswordInput" required>
+          <label for="orgaBundeslandSelect">Bundesland:</label>
+          <select id="orgaBundeslandSelect" required>
+            <option value="">Bitte auswählen</option>
+            <option value="Baden-Württemberg">Baden-Württemberg</option>
+            <option value="Bayern">Bayern</option>
+            <option value="Berlin">Berlin</option>
+            <option value="Brandenburg">Brandenburg</option>
+            <option value="Bremen">Bremen</option>
+            <option value="Hamburg">Hamburg</option>
+            <option value="Hessen">Hessen</option>
+            <option value="Mecklenburg-Vorpommern">Mecklenburg-Vorpommern</option>
+            <option value="Niedersachsen">Niedersachsen</option>
+            <option value="Nordrhein-Westfalen">Nordrhein-Westfalen</option>
+            <option value="Rheinland-Pfalz">Rheinland-Pfalz</option>
+            <option value="Saarland">Saarland</option>
+            <option value="Sachsen">Sachsen</option>
+            <option value="Sachsen-Anhalt">Sachsen-Anhalt</option>
+            <option value="Schleswig-Holstein">Schleswig-Holstein</option>
+            <option value="Thüringen">Thüringen</option>
+          </select>
+          <button type="submit">Orga-Konto erstellen</button>
+        </form>
+        
+        <!-- Liste bestehender Orga-Konten -->
+        <div id="orgaListContainer">
+          <h3>Bestehende Orga-Konten</h3>
+          <div id="orgaList"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal Fenster für Orga-Konto Bearbeitung -->
+    <div id="orgaEditModal" class="hidden modal">
+      <div class="modal-content">
+        <button id="closeOrgaEditModal" class="modal-close-button">&times;</button>
+        <h2>Orga-Konto bearbeiten</h2>
+        <form id="orgaEditForm">
+          <input type="hidden" id="orgaEditUsername">
+          <label for="orgaEditPassword">Neues Passwort:</label>
+          <input type="text" id="orgaEditPassword">
+          <label for="orgaEditBundesland">Neues Bundesland:</label>
+          <select id="orgaEditBundesland">
+            <option value="">Bitte auswählen</option>
+            <option value="Baden-Württemberg">Baden-Württemberg</option>
+            <option value="Bayern">Bayern</option>
+            <option value="Berlin">Berlin</option>
+            <option value="Brandenburg">Brandenburg</option>
+            <option value="Bremen">Bremen</option>
+            <option value="Hamburg">Hamburg</option>
+            <option value="Hessen">Hessen</option>
+            <option value="Mecklenburg-Vorpommern">Mecklenburg-Vorpommern</option>
+            <option value="Niedersachsen">Niedersachsen</option>
+            <option value="Nordrhein-Westfalen">Nordrhein-Westfalen</option>
+            <option value="Rheinland-Pfalz">Rheinland-Pfalz</option>
+            <option value="Saarland">Saarland</option>
+            <option value="Sachsen">Sachsen</option>
+            <option value="Sachsen-Anhalt">Sachsen-Anhalt</option>
+            <option value="Schleswig-Holstein">Schleswig-Holstein</option>
+            <option value="Thüringen">Thüringen</option>
+          </select>
+          <button type="submit">Änderungen speichern</button>
+        </form>
+      </div>
+    </div>
+    
   </main>
   <script src="admin.js"></script>
 </body>

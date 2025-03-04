@@ -9,6 +9,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Zusätzliche Popup-Stile -->
+  <style>
+  </style>
+  
 </head>
 <body>
   <header>
@@ -36,7 +41,7 @@
       
       <div class="form-terms">
         <input type="checkbox" id="terms" name="terms" required>
-        <label for="terms">Ich akzeptiere die <a href="#">Nutzungsbedingungen</a> und <a href="#">Datenschutzrichtlinien</a></label>
+        <label for="terms">Hiermit bestätige ich das ich kein hater bin</label>
       </div>
       
       <button type="submit">Konto erstellen</button>
@@ -48,6 +53,18 @@
     
     <div id="message" class="hidden"></div>
   </main>
+  
+  <!-- Popup-Element -->
+  <div id="popup" class="popup hidden">
+    <div class="popup-content">
+      <p>
+        Ein Admin wird Ihre Anfrage in Kürze bestätigen.<br>
+        Versuchen Sie sich in ein paar Minuten anzumelden.
+      </p>
+      <button id="closePopup">Schließen</button>
+    </div>
+  </div>
+  
   <script src="register.js"></script>
 </body>
 </html>

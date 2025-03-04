@@ -19,13 +19,17 @@ const privateDir = path.join(__dirname, 'private');
 const chatsDir = path.join(privateDir, 'bundes_chats');
 const picturesDir = path.join(privateDir, 'pictures'); // Für Bilder
 
-// Stelle sicher, dass das Bilder-Verzeichnis existiert
+// Stelle sicher, dass die notwendigen Verzeichnisse existieren
 if (!fs.existsSync(picturesDir)) {
   fs.mkdirSync(picturesDir, { recursive: true });
+}
+if (!fs.existsSync(chatsDir)) {
+  fs.mkdirSync(chatsDir, { recursive: true });
 }
 
 const usersFile = path.join(privateDir, 'users.json');
 const adminsFile = path.join(privateDir, 'admins.json');
+const orgaFile = path.join(privateDir, 'orga.json'); // Für Organisatoren
 const requestAccessFile = path.join(privateDir, 'request_acces.json');
 
 // Hilfsfunktionen zum synchronen Lesen/Schreiben von JSON
@@ -53,7 +57,7 @@ function writeJSON(filePath, data) {
 // In-Memory-Store für Rate Limiting (nur für normale Nutzer)
 const userMessageTimestamps = {};
 
-// Multer-Konfiguration für Bilder-Upload mit fileFilter
+// Multer-Konfiguration für Bilder-Upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, picturesDir);
@@ -67,34 +71,26 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: function (req, file, cb) {
-    // Prüfe, ob der User (bereits durch authMiddleware oder adminAuth gesetzt) Admin ist.
-    if (req.user && req.user.isAdmin) {
+    // Erlaubt Bild-Uploads für Admins (über req.user) und Organisatoren (über req.orga)
+    if ((req.user && req.user.isAdmin) || req.orga) {
       cb(null, true);
     } else {
-      cb(new Error('Nur Admins dürfen Bilder hochladen'), false);
+      cb(new Error('Nur Admins oder Organisatoren dürfen Bilder hochladen'), false);
     }
   }
 });
 
-// Statische Dateien (inklusive Bilder, die unter /pictures erreichbar sind)
-// Hier wird als Standarddatei main.html statt index.html verwendet.
-app.use(express.static(path.join(__dirname, 'public'), { index: 'main.html' }));
-app.use('/pictures', express.static(picturesDir));
-
 /* ---------------------------
-   Middleware: Authentifizierung (Cookies) für normale Nutzer
+   Middleware: Authentifizierung (Cookies) für normale Nutzer und Admins
 ----------------------------*/
-
 function authMiddleware(req, res, next) {
   const { username, password } = req.cookies;
   if (!username || !password) {
     return res.status(401).json({ message: 'Nicht eingeloggt' });
   }
-
   // Suche in users.json
   let users = readJSON(usersFile);
   let user = users.find(u => u.username === username && u.password === password);
-
   // Falls nicht gefunden, in admins.json suchen
   if (!user) {
     let admins = readJSON(adminsFile);
@@ -104,7 +100,6 @@ function authMiddleware(req, res, next) {
       user = adminUser;
     }
   }
-
   if (!user) {
     return res.status(401).json({ message: 'Ungültige Zugangsdaten' });
   }
@@ -116,11 +111,9 @@ function authMiddleware(req, res, next) {
 }
 
 /* ---------------------------
-   Kombinierte Admin-Authentifizierungs-Middleware
+   Middleware: Admin-Authentifizierung (API Key oder Cookies)
 ----------------------------*/
-
 function adminAuth(req, res, next) {
-  // Versuche Cookie-Authentifizierung
   const { username, password } = req.cookies;
   if (username && password) {
     let users = readJSON(usersFile);
@@ -137,10 +130,8 @@ function adminAuth(req, res, next) {
       return next();
     }
   }
-  // Falls keine gültigen Cookies vorhanden sind, versuche API-Key-Authentifizierung.
   const apiKey = (req.body.apiKey || req.query.apiKey || "").trim();
   if (apiKey === API_KEY) {
-    // Setze einen Dummy-Admin-Nutzer.
     req.user = { username: "admin", isAdmin: true };
     return next();
   }
@@ -148,9 +139,32 @@ function adminAuth(req, res, next) {
 }
 
 /* ---------------------------
+   Middleware: Organisator-Authentifizierung
+   - Organisatoren haben eigene Cookies: "orgaUsername" und "orgaPassword"
+----------------------------*/
+function orgaAuth(req, res, next) {
+  const { orgaUsername, orgaPassword } = req.cookies;
+  if (!orgaUsername || !orgaPassword) {
+    return res.status(401).json({ message: 'Nicht als Organisator eingeloggt' });
+  }
+  let orgas = readJSON(orgaFile);
+  const orga = orgas.find(o => o.username === orgaUsername && o.password === orgaPassword);
+  if (!orga) {
+    return res.status(401).json({ message: 'Ungültige Organisator-Zugangsdaten' });
+  }
+  req.orga = orga;
+  next();
+}
+
+/* ---------------------------
+   Statische Dateien
+----------------------------*/
+app.use(express.static(path.join(__dirname, 'public'), { index: 'main.html' }));
+app.use('/pictures', express.static(picturesDir));
+
+/* ---------------------------
    Endpunkte für normale Nutzer, Login, Signup etc.
 ----------------------------*/
-
 app.get('/api/userinfo', authMiddleware, (req, res) => {
   res.json({ username: req.user.username, isAdmin: req.user.isAdmin });
 });
@@ -210,9 +224,8 @@ app.post('/api/signup', (req, res) => {
 });
 
 /* ---------------------------
-   Chat-Endpunkte
+   Chat-Endpunkte (für normale Nutzer und Admins)
 ----------------------------*/
-
 app.get('/api/channels', authMiddleware, (req, res) => {
   fs.readdir(chatsDir, (err, files) => {
     if (err) {
@@ -237,35 +250,27 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ message: 'Chat nicht gefunden' });
   }
+  let chatData = [];
   try {
-    const chatData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    res.json(chatData);
+    chatData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch (e) {
     console.error('Fehler beim Lesen des Chats', e);
-    res.status(500).json({ message: 'Fehler beim Lesen des Chats' });
+    return res.status(500).json({ message: 'Fehler beim Lesen des Chats' });
   }
+  // Sortiere Nachrichten nach Timestamp (aufsteigend)
+  chatData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  if (req.query.olderThan) {
+    const olderThanDate = new Date(req.query.olderThan);
+    chatData = chatData.filter(msg => new Date(msg.timestamp) < olderThanDate);
+  }
+  if (req.query.limit) {
+    const limit = parseInt(req.query.limit, 10);
+    if (!isNaN(limit) && limit > 0) {
+      chatData = chatData.slice(-limit);
+    }
+  }
+  res.json(chatData);
 });
-
-// Hilfsfunktion: Löscht alle Nachrichten eines bestimmten Nutzers in jedem Chat
-function deleteUserMessages(username) {
-  try {
-    const chatFiles = fs.readdirSync(chatsDir).filter(file => file.endsWith('.json'));
-    chatFiles.forEach(file => {
-      const filePath = path.join(chatsDir, file);
-      let chatData = [];
-      try {
-        chatData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-      } catch (err) {
-        console.error("Fehler beim Parsen der Datei", filePath, err);
-        return;
-      }
-      const filteredChatData = chatData.filter(msg => msg.user !== username);
-      fs.writeFileSync(filePath, JSON.stringify(filteredChatData, null, 2), 'utf8');
-    });
-  } catch (err) {
-    console.error("Fehler beim Löschen der Nachrichten für Benutzer", username, err);
-  }
-}
 
 app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
@@ -304,7 +309,8 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
     user: req.user.username,
     isAdmin: !!req.user.isAdmin,
     message,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    pinned: false
   };
   chatData.push(newMessage);
   writeJSON(filePath, chatData);
@@ -312,9 +318,6 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
 });
 
 app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ message: 'Nur Admins dürfen Bilder hochladen' });
-  }
   upload.single('image')(req, res, function(err) {
     if (err) {
       return res.status(403).json({ message: err.message });
@@ -340,7 +343,8 @@ app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
       user: req.user.username,
       isAdmin: !!req.user.isAdmin,
       image: req.file.filename,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      pinned: false
     };
     chatData.push(newMessage);
     writeJSON(filePath, chatData);
@@ -382,8 +386,260 @@ app.delete('/api/chats/:chatName', authMiddleware, (req, res) => {
 });
 
 /* ---------------------------
-   Admin-Endpunkte (mit kombinierten Auth: adminAuth)
+   Endpunkte für Organisatoren
 ----------------------------*/
+// Organisator-Konto per API-Key erstellen (öffentliche Erstellung ist NICHT vorgesehen – siehe Admin)
+app.post('/api/orga/create', (req, res) => {
+  const { apiKey, username, password, bundesland } = req.body;
+  if (apiKey !== API_KEY) {
+    return res.status(403).json({ message: 'Ungültiger API Key' });
+  }
+  if (!username || !password || !bundesland) {
+    return res.status(400).json({ message: 'Username, Passwort und Bundesland erforderlich' });
+  }
+  let orgas = readJSON(orgaFile);
+  if (orgas.find(o => o.username === username)) {
+    return res.status(400).json({ message: 'Organisator existiert bereits' });
+  }
+  orgas.push({ username, password, bundesland });
+  writeJSON(orgaFile, orgas);
+  res.json({ message: 'Organisator-Konto erstellt' });
+});
+
+// Orga Login
+app.post('/api/orga/login', (req, res) => {
+  const { username, password } = req.body;
+  let orgas = readJSON(orgaFile);
+  const orga = orgas.find(o => o.username === username && o.password === password);
+  if (!orga) {
+    return res.status(401).json({ message: 'Ungültige Zugangsdaten' });
+  }
+  res.cookie('orgaUsername', username, { httpOnly: true });
+  res.cookie('orgaPassword', password, { httpOnly: true });
+  res.json({ message: 'Organisator erfolgreich eingeloggt' });
+});
+
+// Orga Logout
+app.post('/api/orga/logout', (req, res) => {
+  res.clearCookie('orgaUsername');
+  res.clearCookie('orgaPassword');
+  res.json({ message: 'Organisator erfolgreich ausgeloggt' });
+});
+
+// GET Orga-Chat: Liefert paginierte Nachrichten (limit, olderThan)
+app.get('/api/orga/chats', orgaAuth, (req, res) => {
+  const orgaChatFile = path.join(chatsDir, 'orga_chat.json');
+  if (!fs.existsSync(orgaChatFile)) {
+    return res.json([]);
+  }
+  let chatData = [];
+  try {
+    chatData = JSON.parse(fs.readFileSync(orgaChatFile, 'utf8'));
+  } catch (e) {
+    console.error('Fehler beim Lesen des Orga-Chats', e);
+    return res.status(500).json({ message: 'Fehler beim Lesen des Orga-Chats' });
+  }
+  // Sortiere Nachrichten aufsteigend (älteste zuerst)
+  chatData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  
+  // Standard-Limit = 20 Nachrichten
+  const limit = parseInt(req.query.limit, 10) || 20;
+  
+  // Falls ein "olderThan"-Parameter gesetzt ist, filtere Nachrichten, die älter sind.
+  if (req.query.olderThan) {
+    const olderThanDate = new Date(req.query.olderThan);
+    chatData = chatData.filter(msg => new Date(msg.timestamp) < olderThanDate);
+  }
+  
+  // Gib nur die letzten "limit" Nachrichten aus.
+  chatData = chatData.slice(-limit);
+  res.json(chatData);
+});
+
+// POST Orga-Chat: Textnachricht senden
+app.post('/api/orga/chats', orgaAuth, (req, res) => {
+  const { message } = req.body;
+  if (!message) {
+    return res.status(400).json({ message: 'Nachricht fehlt' });
+  }
+  const orgaChatFile = path.join(chatsDir, 'orga_chat.json');
+  let chatData = [];
+  if (fs.existsSync(orgaChatFile)) {
+    try {
+      chatData = JSON.parse(fs.readFileSync(orgaChatFile, 'utf8'));
+    } catch (e) {
+      console.error('Fehler beim Parsen des Orga-Chats', e);
+    }
+  }
+  const newMessage = {
+    id: Date.now() + '_' + Math.floor(Math.random() * 1000),
+    user: req.orga.username,
+    bundesland: req.orga.bundesland,
+    message,
+    timestamp: new Date().toISOString(),
+    pinned: false
+  };
+  chatData.push(newMessage);
+  writeJSON(orgaChatFile, chatData);
+  res.json({ message: 'Nachricht gesendet', newMessage });
+});
+
+// POST Orga-Chat: Bild hochladen und Nachricht senden
+app.post('/api/orga/chats/image', orgaAuth, (req, res) => {
+  upload.single('image')(req, res, function(err) {
+    if (err) {
+      return res.status(403).json({ message: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'Kein Bild hochgeladen' });
+    }
+    const orgaChatFile = path.join(chatsDir, 'orga_chat.json');
+    let chatData = [];
+    if (fs.existsSync(orgaChatFile)) {
+      try {
+        chatData = JSON.parse(fs.readFileSync(orgaChatFile, 'utf8'));
+      } catch (e) {
+        console.error('Fehler beim Parsen des Orga-Chats', e);
+      }
+    }
+    const newMessage = {
+      id: Date.now() + '_' + Math.floor(Math.random() * 1000),
+      user: req.orga.username,
+      bundesland: req.orga.bundesland,
+      image: req.file.filename,
+      timestamp: new Date().toISOString(),
+      pinned: false
+    };
+    chatData.push(newMessage);
+    writeJSON(orgaChatFile, chatData);
+    res.json({ message: 'Bild hochgeladen und Nachricht gesendet', newMessage });
+  });
+});
+
+// Neue Endpunkte für das Anpinnen von Nachrichten im Orga-Chat
+app.post('/api/orga/chats/pin', orgaAuth, (req, res) => {
+  const { messageId, pin } = req.body;
+  if (typeof messageId === 'undefined' || typeof pin === 'undefined') {
+    return res.status(400).json({ message: 'messageId und pin-Status erforderlich' });
+  }
+  const orgaChatFile = path.join(chatsDir, 'orga_chat.json');
+  if (!fs.existsSync(orgaChatFile)) {
+    return res.status(404).json({ message: 'Orga-Chat nicht gefunden' });
+  }
+  let chatData = [];
+  try {
+    chatData = JSON.parse(fs.readFileSync(orgaChatFile, 'utf8'));
+  } catch (e) {
+    console.error('Fehler beim Parsen des Orga-Chats', e);
+    return res.status(500).json({ message: 'Fehler beim Lesen des Orga-Chats' });
+  }
+  const msg = chatData.find(m => m.id === messageId);
+  if (!msg) {
+    return res.status(404).json({ message: 'Nachricht nicht gefunden' });
+  }
+  msg.pinned = pin;
+  writeJSON(orgaChatFile, chatData);
+  res.json({ message: `Nachricht ${pin ? 'angepinnt' : 'abgelöst'}` });
+});
+
+// GET Orga-Chat: Angepinnte Nachrichten abrufen
+app.get('/api/orga/chats/pinned', orgaAuth, (req, res) => {
+  const orgaChatFile = path.join(chatsDir, 'orga_chat.json');
+  if (!fs.existsSync(orgaChatFile)) {
+    return res.json([]);
+  }
+  let chatData = [];
+  try {
+    chatData = JSON.parse(fs.readFileSync(orgaChatFile, 'utf8'));
+  } catch (e) {
+    console.error('Fehler beim Lesen des Orga-Chats', e);
+    return res.status(500).json({ message: 'Fehler beim Lesen des Orga-Chats' });
+  }
+  const pinned = chatData.filter(m => m.pinned);
+  // Sortiere angepinnte Nachrichten (älteste zuerst)
+  pinned.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  res.json(pinned);
+});
+
+/* ---------------------------
+   Neue Admin-Endpunkte für Orga-Konten
+----------------------------*/
+
+// GET: Liste aller Orga-Konten
+app.get('/api/admin/orgas', adminAuth, (req, res) => {
+  const orgas = readJSON(orgaFile);
+  res.json(orgas);
+});
+
+// POST: Orga-Konto erstellen (Admin-Panel)
+app.post('/api/admin/orgas/create', adminAuth, (req, res) => {
+  const { username, password, bundesland } = req.body;
+  if (!username || !password || !bundesland) {
+    return res.status(400).json({ message: 'Alle Felder (Username, Passwort, Bundesland) sind erforderlich' });
+  }
+  let orgas = readJSON(orgaFile);
+  if (orgas.find(o => o.username === username)) {
+    return res.status(400).json({ message: 'Ein Orga-Konto mit diesem Benutzernamen existiert bereits' });
+  }
+  orgas.push({ username, password, bundesland });
+  writeJSON(orgaFile, orgas);
+  res.json({ message: 'Orga-Konto erfolgreich erstellt' });
+});
+
+// PUT: Orga-Konto aktualisieren (z. B. Passwort oder Bundesland ändern)
+app.put('/api/admin/orgas/:username', adminAuth, (req, res) => {
+  const targetUsername = req.params.username;
+  const { password, bundesland } = req.body;
+  let orgas = readJSON(orgaFile);
+  const orga = orgas.find(o => o.username === targetUsername);
+  if (!orga) {
+    return res.status(404).json({ message: 'Orga-Konto nicht gefunden' });
+  }
+  if (password) {
+    orga.password = password;
+  }
+  if (bundesland) {
+    orga.bundesland = bundesland;
+  }
+  writeJSON(orgaFile, orgas);
+  res.json({ message: 'Orga-Konto erfolgreich aktualisiert' });
+});
+
+// DELETE: Orga-Konto löschen
+app.delete('/api/admin/orgas/:username', adminAuth, (req, res) => {
+  const targetUsername = req.params.username;
+  let orgas = readJSON(orgaFile);
+  const newOrgas = orgas.filter(o => o.username !== targetUsername);
+  if (newOrgas.length === orgas.length) {
+    return res.status(404).json({ message: 'Orga-Konto nicht gefunden' });
+  }
+  writeJSON(orgaFile, newOrgas);
+  res.json({ message: 'Orga-Konto erfolgreich gelöscht' });
+});
+
+/* ---------------------------
+   Admin-Endpunkte (wie bisher)
+----------------------------*/
+// Hilfsfunktion zum Löschen aller Nachrichten eines bestimmten Nutzers in jedem Chat
+function deleteUserMessages(username) {
+  try {
+    const chatFiles = fs.readdirSync(chatsDir).filter(file => file.endsWith('.json'));
+    chatFiles.forEach(file => {
+      const filePath = path.join(chatsDir, file);
+      let chatData = [];
+      try {
+        chatData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      } catch (err) {
+        console.error("Fehler beim Parsen der Datei", filePath, err);
+        return;
+      }
+      const filteredChatData = chatData.filter(msg => msg.user !== username);
+      fs.writeFileSync(filePath, JSON.stringify(filteredChatData, null, 2), 'utf8');
+    });
+  } catch (err) {
+    console.error("Fehler beim Löschen der Nachrichten für Benutzer", username, err);
+  }
+}
 
 app.post('/api/admin/ban', adminAuth, (req, res) => {
   const { username } = req.body;
