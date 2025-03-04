@@ -77,14 +77,14 @@ const upload = multer({
 });
 
 // Statische Dateien (inklusive Bilder, die unter /pictures erreichbar sind)
-app.use(express.static(path.join(__dirname, 'public')));
+// Hier wird als Standarddatei main.html statt index.html verwendet.
+app.use(express.static(path.join(__dirname, 'public'), { index: 'main.html' }));
 app.use('/pictures', express.static(picturesDir));
 
 /* ---------------------------
    Middleware: Authentifizierung (Cookies) für normale Nutzer
 ----------------------------*/
 
-// Middleware: Prüft Cookie-Login und Sperrstatus
 function authMiddleware(req, res, next) {
   const { username, password } = req.cookies;
   if (!username || !password) {
@@ -119,8 +119,6 @@ function authMiddleware(req, res, next) {
    Kombinierte Admin-Authentifizierungs-Middleware
 ----------------------------*/
 
-// Diese Middleware versucht zuerst, über Cookies zu authentifizieren.
-// Falls dies fehlschlägt, wird der API-Key (aus Body oder Query) geprüft.
 function adminAuth(req, res, next) {
   // Versuche Cookie-Authentifizierung
   const { username, password } = req.cookies;
