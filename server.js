@@ -10,6 +10,9 @@ const PORT = 3000;
 // Definiere den API Key als Konstante (8-stellige zufällige alphanumerische Zeichenkette)
 const API_KEY = "QjT6CoRwXS";
 
+// Globaler Sperrstatus: Standardmäßig entsperrt
+let chatsLocked = false;
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -81,33 +84,45 @@ const upload = multer({
 });
 
 /* ---------------------------
-   Middleware: Authentifizierung (Cookies) für normale Nutzer und Admins
+   Middleware: Authentifizierung (Cookies) für normale Nutzer, Admins und Organisatoren
 ----------------------------*/
 function authMiddleware(req, res, next) {
   const { username, password } = req.cookies;
-  if (!username || !password) {
-    return res.status(401).json({ message: 'Nicht eingeloggt' });
-  }
-  // Suche in users.json
-  let users = readJSON(usersFile);
-  let user = users.find(u => u.username === username && u.password === password);
-  // Falls nicht gefunden, in admins.json suchen
-  if (!user) {
-    let admins = readJSON(adminsFile);
-    let adminUser = admins.find(a => a.username === username && a.password === password);
-    if (adminUser) {
-      adminUser.isAdmin = true;
-      user = adminUser;
+  if (username && password) {
+    // Suche in users.json
+    let users = readJSON(usersFile);
+    let user = users.find(u => u.username === username && u.password === password);
+    // Falls nicht gefunden, in admins.json suchen
+    if (!user) {
+      let admins = readJSON(adminsFile);
+      let adminUser = admins.find(a => a.username === username && a.password === password);
+      if (adminUser) {
+        adminUser.isAdmin = true;
+        user = adminUser;
+      }
+    }
+    if (user) {
+      if (user.locked) {
+        return res.status(403).json({ message: 'Account gesperrt' });
+      }
+      req.user = user;
+      return next();
     }
   }
-  if (!user) {
-    return res.status(401).json({ message: 'Ungültige Zugangsdaten' });
+  // Falls keine normalen Nutzer-Cookies, versuche Organisator-Cookies
+  const { orgaUsername, orgaPassword } = req.cookies;
+  if (orgaUsername && orgaPassword) {
+    let orgas = readJSON(orgaFile);
+    const orga = orgas.find(o => o.username === orgaUsername && o.password === orgaPassword);
+    if (orga) {
+      // Organisatoren erhalten Admin-Rechte in normalen Chats, werden aber als Organisator markiert
+      req.user = { username: orga.username, isAdmin: true, isOrga: true, bundesland: orga.bundesland };
+      return next();
+    } else {
+      return res.status(401).json({ message: 'Ungültige Organisator-Zugangsdaten' });
+    }
   }
-  if (user.locked) {
-    return res.status(403).json({ message: 'Account gesperrt' });
-  }
-  req.user = user;
-  next();
+  return res.status(401).json({ message: 'Nicht eingeloggt' });
 }
 
 /* ---------------------------
@@ -166,28 +181,54 @@ app.use('/pictures', express.static(picturesDir));
    Endpunkte für normale Nutzer, Login, Signup etc.
 ----------------------------*/
 app.get('/api/userinfo', authMiddleware, (req, res) => {
-  res.json({ username: req.user.username, isAdmin: req.user.isAdmin });
+  const info = { username: req.user.username, isAdmin: req.user.isAdmin };
+  if (req.user.isOrga) {
+    info.rank = 'Organisator';
+    info.bundesland = req.user.bundesland;
+  }
+  res.json(info);
 });
 
+// Aktualisierter Login: Suche nun auch in orga.json
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
-  let users = readJSON(usersFile);
-  let user = users.find(u => u.username === username && u.password === password);
+  let user = null;
+  let source = null;
+  
+  const users = readJSON(usersFile);
+  user = users.find(u => u.username === username && u.password === password);
+  
   if (!user) {
-    let admins = readJSON(adminsFile);
-    let adminUser = admins.find(a => a.username === username && a.password === password);
-    if (adminUser) {
-      adminUser.isAdmin = true;
-      user = adminUser;
+    const admins = readJSON(adminsFile);
+    user = admins.find(a => a.username === username && a.password === password);
+    if (user) {
+      user.isAdmin = true;
+      source = 'admin';
     }
   }
+  
+  if (!user) {
+    const orgas = readJSON(orgaFile);
+    user = orgas.find(o => o.username === username && o.password === password);
+    if (user) {
+      user.isOrga = true;
+      source = 'orga';
+    }
+  }
+  
   if (user) {
     if (user.locked) {
       return res.status(403).json({ message: 'Account gesperrt' });
     }
-    res.cookie('username', username, { httpOnly: true });
-    res.cookie('password', password, { httpOnly: true });
-    return res.json({ message: 'Erfolgreich eingeloggt', isAdmin: !!user.isAdmin });
+    if (source === 'orga') {
+      res.cookie('orgaUsername', username, { httpOnly: true });
+      res.cookie('orgaPassword', password, { httpOnly: true });
+      return res.json({ message: 'Organisator erfolgreich eingeloggt', isAdmin: true, isOrga: true, bundesland: user.bundesland });
+    } else {
+      res.cookie('username', username, { httpOnly: true });
+      res.cookie('password', password, { httpOnly: true });
+      return res.json({ message: 'Erfolgreich eingeloggt', isAdmin: !!user.isAdmin });
+    }
   } else {
     return res.status(401).json({ message: 'Ungültige Zugangsdaten' });
   }
@@ -196,6 +237,8 @@ app.post('/api/login', (req, res) => {
 app.post('/api/logout', (req, res) => {
   res.clearCookie('username');
   res.clearCookie('password');
+  res.clearCookie('orgaUsername');
+  res.clearCookie('orgaPassword');
   res.json({ message: 'Erfolgreich ausgeloggt' });
 });
 
@@ -224,7 +267,7 @@ app.post('/api/signup', (req, res) => {
 });
 
 /* ---------------------------
-   Chat-Endpunkte (für normale Nutzer und Admins)
+   Chat-Endpunkte (für normale Nutzer, Admins und Organisatoren)
 ----------------------------*/
 app.get('/api/channels', authMiddleware, (req, res) => {
   fs.readdir(chatsDir, (err, files) => {
@@ -237,6 +280,8 @@ app.get('/api/channels', authMiddleware, (req, res) => {
     if (!req.user.isAdmin) {
       channels = channels.filter(ch => ch !== 'Admin_chat');
     }
+    // Filtere den Orga-Chat aus, damit er nicht in der Liste erscheint (Zugriff über die eigenen Endpunkte)
+    channels = channels.filter(ch => ch !== 'orga_chat');
     res.json(channels);
   });
 });
@@ -245,6 +290,9 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
   if (chatName === 'Admin_chat' && !req.user.isAdmin) {
     return res.status(403).json({ message: 'Kein Zugriff auf Admin Chat' });
+  }
+  if (chatName === 'orga_chat') {
+    return res.status(403).json({ message: 'Kein Zugriff auf Orga Chat. Bitte als Organisator einloggen.' });
   }
   const filePath = path.join(chatsDir, chatName + '.json');
   if (!fs.existsSync(filePath)) {
@@ -277,6 +325,13 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   if (chatName === 'Admin_chat' && !req.user.isAdmin) {
     return res.status(403).json({ message: 'Kein Zugriff auf Admin Chat' });
   }
+  if (chatName === 'orga_chat') {
+    return res.status(403).json({ message: 'Kein Zugriff auf Orga Chat. Bitte als Organisator einloggen.' });
+  }
+  // Überprüfe Sperrstatus: Wenn Chats gesperrt sind, dürfen nur Admins oder Organisatoren posten
+  if (chatsLocked && !req.user.isAdmin && !req.user.isOrga) {
+    return res.status(403).json({ message: 'Chats sind gesperrt' });
+  }
   const { message } = req.body;
   if (!message) {
     return res.status(400).json({ message: 'Nachricht fehlt' });
@@ -307,24 +362,36 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   const newMessage = {
     id: Date.now() + '_' + Math.floor(Math.random() * 1000),
     user: req.user.username,
-    isAdmin: !!req.user.isAdmin,
     message,
     timestamp: new Date().toISOString(),
     pinned: false
   };
+  // Falls der Benutzer ein Organisator ist, setze den Rang inkl. Bundesland; andernfalls Admin (falls zutreffend)
+  if (req.user.isOrga) {
+    newMessage.rank = `Organisator (${req.user.bundesland})`;
+  } else if (req.user.isAdmin) {
+    newMessage.rank = 'Admin';
+  }
   chatData.push(newMessage);
   writeJSON(filePath, chatData);
   res.json({ message: 'Nachricht gesendet', newMessage });
 });
 
 app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
+  const chatName = req.params.chatName;
+  // Überprüfe Sperrstatus: Wenn Chats gesperrt sind, dürfen nur Admins oder Organisatoren posten
+  if (chatsLocked && !req.user.isAdmin && !req.user.isOrga) {
+    return res.status(403).json({ message: 'Chats sind gesperrt' });
+  }
+  if (chatName === 'Admin_chat' && !req.user.isAdmin) {
+    return res.status(403).json({ message: 'Kein Zugriff auf Admin Chat' });
+  }
+  if (chatName === 'orga_chat') {
+    return res.status(403).json({ message: 'Kein Zugriff auf Orga Chat. Bitte als Organisator einloggen.' });
+  }
   upload.single('image')(req, res, function(err) {
     if (err) {
       return res.status(403).json({ message: err.message });
-    }
-    const chatName = req.params.chatName;
-    if (chatName === 'Admin_chat' && !req.user.isAdmin) {
-      return res.status(403).json({ message: 'Kein Zugriff auf Admin Chat' });
     }
     if (!req.file) {
       return res.status(400).json({ message: 'Kein Bild hochgeladen' });
@@ -335,17 +402,21 @@ app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
       try {
         chatData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       } catch (e) {
-        console.error('Fehler beim Parsen', e);
+        console.error('Fehler beim Parsen des Chats', e);
       }
     }
     const newMessage = {
       id: Date.now() + '_' + Math.floor(Math.random() * 1000),
       user: req.user.username,
-      isAdmin: !!req.user.isAdmin,
       image: req.file.filename,
       timestamp: new Date().toISOString(),
       pinned: false
     };
+    if (req.user.isOrga) {
+      newMessage.rank = `Organisator (${req.user.bundesland})`;
+    } else if (req.user.isAdmin) {
+      newMessage.rank = 'Admin';
+    }
     chatData.push(newMessage);
     writeJSON(filePath, chatData);
     res.json({ message: 'Bild hochgeladen und Nachricht gesendet', newMessage });
@@ -356,6 +427,9 @@ app.delete('/api/chats/:chatName', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
   if (chatName === 'Admin_chat' && !req.user.isAdmin) {
     return res.status(403).json({ message: 'Kein Zugriff auf Admin Chat' });
+  }
+  if (chatName === 'orga_chat') {
+    return res.status(403).json({ message: 'Kein Zugriff auf Orga Chat. Bitte als Organisator einloggen.' });
   }
   const { messageId } = req.body;
   if (!messageId) {
@@ -369,7 +443,7 @@ app.delete('/api/chats/:chatName', authMiddleware, (req, res) => {
   try {
     chatData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch (e) {
-    console.error('Fehler beim Parsen', e);
+    console.error('Fehler beim Parsen des Chats', e);
     return res.status(500).json({ message: 'Fehler beim Lesen des Chats' });
   }
   const index = chatData.findIndex(msg => msg.id === messageId);
@@ -474,11 +548,11 @@ app.post('/api/orga/chats', orgaAuth, (req, res) => {
   const newMessage = {
     id: Date.now() + '_' + Math.floor(Math.random() * 1000),
     user: req.orga.username,
-    bundesland: req.orga.bundesland,
     message,
     timestamp: new Date().toISOString(),
     pinned: false
   };
+  newMessage.rank = `Organisator (${req.orga.bundesland})`;
   chatData.push(newMessage);
   writeJSON(orgaChatFile, chatData);
   res.json({ message: 'Nachricht gesendet', newMessage });
@@ -505,11 +579,11 @@ app.post('/api/orga/chats/image', orgaAuth, (req, res) => {
     const newMessage = {
       id: Date.now() + '_' + Math.floor(Math.random() * 1000),
       user: req.orga.username,
-      bundesland: req.orga.bundesland,
       image: req.file.filename,
       timestamp: new Date().toISOString(),
       pinned: false
     };
+    newMessage.rank = `Organisator (${req.orga.bundesland})`;
     chatData.push(newMessage);
     writeJSON(orgaChatFile, chatData);
     res.json({ message: 'Bild hochgeladen und Nachricht gesendet', newMessage });
@@ -827,6 +901,16 @@ app.post('/api/admin/update-media', adminAuth, mediaUpload.fields([
     }
   });
   res.json({ message: 'Medien erfolgreich aktualisiert' });
+});
+
+// Neuer Admin-Endpunkt: Chats sperren/entsperren
+app.post('/api/admin/chats-lock', adminAuth, (req, res) => {
+  const { lock } = req.body;
+  if (typeof lock !== 'boolean') {
+    return res.status(400).json({ message: 'Lock-Status als boolean erforderlich' });
+  }
+  chatsLocked = lock;
+  res.json({ message: `Chats wurden ${lock ? 'gesperrt' : 'entsperrt'}` });
 });
 
 app.listen(PORT, () => {

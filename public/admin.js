@@ -18,6 +18,35 @@ document.addEventListener('DOMContentLoaded', () => {
   let fullUserList = [];
   let userListExpanded = false;
   let fullOrgaList = [];
+
+  // Neuen Button "Sperre Chats" initialisieren (HTML muss ein Element mit id="lockChatsBtn" enthalten)
+  const lockChatsBtn = document.getElementById('lockChatsBtn');
+  let chatsLockedState = false; // Lokaler Zustand – Standardmäßig entsperrt
+
+  if (lockChatsBtn) {
+    lockChatsBtn.addEventListener('click', async () => {
+      const newState = !chatsLockedState; // Umschalten
+      try {
+        const res = await fetch('/api/admin/chats-lock?apiKey=' + encodeURIComponent(currentApiKey), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lock: newState })
+        });
+        const result = await res.json();
+        if (res.ok) {
+          chatsLockedState = newState;
+          // Button-Beschriftung je nach Status ändern
+          lockChatsBtn.textContent = chatsLockedState ? 'Chats entsperren' : 'Sperre Chats';
+          alert(result.message);
+        } else {
+          alert(result.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Fehler beim Ändern des Chat-Status');
+      }
+    });
+  }
   
   // API-Key Login
   const loginForm = document.getElementById('adminLoginForm');
@@ -308,13 +337,17 @@ document.addEventListener('DOMContentLoaded', () => {
   
   window.banUser = async (username) => {
     try {
-      const res = await fetch('/api/admin/ban?apiKey=' + encodeURIComponent(currentApiKey), {
+      const res = await fetch('/api/admin/ban', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
       });
       const result = await res.json();
-      alert(result.message);
+      if (!res.ok) {
+        alert(result.message || 'Fehler beim Sperren des Nutzers');
+      } else {
+        alert(result.message);
+      }
     } catch (error) {
       console.error(error);
     }

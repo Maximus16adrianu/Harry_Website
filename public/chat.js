@@ -34,7 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Kanäle laden
       const res = await fetch('/api/channels');
       if (res.ok) {
-        const channels = await res.json();
+        let channels = await res.json();
+        // Filtere den Orga-Chat zusätzlich clientseitig (nur zur Sicherheit)
+        channels = channels.filter(channel => channel !== 'orga_chat');
         chatInterface.classList.remove('hidden');
         loginSection.classList.add('hidden');
         renderChannels(channels);
@@ -108,7 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const meta = document.createElement('span');
         meta.classList.add('meta');
-        if (msg.isAdmin) {
+        if (msg.rank) {
+          meta.textContent = `${msg.rank}: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
+          if (msg.rank === 'Admin') {
+            div.classList.add('admin');
+          }
+        } else if (msg.isAdmin) {
           meta.textContent = `Admin: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
           div.classList.add('admin');
         } else {
@@ -166,7 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const meta = document.createElement('span');
         meta.classList.add('meta');
-        if (msg.isAdmin) {
+        if (msg.rank) {
+          meta.textContent = `${msg.rank}: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
+          if (msg.rank === 'Admin') {
+            div.classList.add('admin');
+          }
+        } else if (msg.isAdmin) {
           meta.textContent = `Admin: ${msg.user} | ${new Date(msg.timestamp).toLocaleString()}`;
           div.classList.add('admin');
         } else {
@@ -348,6 +360,14 @@ document.addEventListener('DOMContentLoaded', () => {
           loadChat(currentChannel);
         } else {
           alert(result.message);
+          // Falls die Chats gesperrt sind, Eingabefelder deaktivieren (für normale Nutzer)
+          if (result.message.includes('gesperrt')) {
+            messageInput.disabled = true;
+            const submitBtn = messageForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+              submitBtn.disabled = true;
+            }
+          }
         }
       } catch (error) {
         console.error(error);
@@ -396,6 +416,8 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(result.message);
         document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
         document.cookie = 'password=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        document.cookie = 'orgaUsername=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        document.cookie = 'orgaPassword=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
         window.location.href = 'main.html';
       } catch (error) {
         console.error(error);
