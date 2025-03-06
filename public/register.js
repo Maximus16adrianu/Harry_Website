@@ -132,7 +132,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const popup = document.getElementById('popup');
         popup.classList.remove('hidden');
     }
-    
+
+    // Event-Listener zum Schließen des Popups und Weiterleitung zur Homepage
+document.getElementById('closePopup').addEventListener('click', () => {
+    document.getElementById('popup').classList.add('hidden');
+    window.location.href = 'main.html';
+    });
+
     // Event-Listener zum Schließen des Popups
     document.getElementById('closePopup').addEventListener('click', () => {
         document.getElementById('popup').classList.add('hidden');

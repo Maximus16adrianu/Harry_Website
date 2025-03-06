@@ -19,13 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let userListExpanded = false;
   let fullOrgaList = [];
 
-  // Neuen Button "Sperre Chats" initialisieren (HTML muss ein Element mit id="lockChatsBtn" enthalten)
+  // Lock Chats Button
   const lockChatsBtn = document.getElementById('lockChatsBtn');
-  let chatsLockedState = false; // Lokaler Zustand – Standardmäßig entsperrt
+  let chatsLockedState = false; // Standard: entsperrt
 
   if (lockChatsBtn) {
     lockChatsBtn.addEventListener('click', async () => {
-      const newState = !chatsLockedState; // Umschalten
+      const newState = !chatsLockedState;
       try {
         const res = await fetch('/api/admin/chats-lock?apiKey=' + encodeURIComponent(currentApiKey), {
           method: 'POST',
@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await res.json();
         if (res.ok) {
           chatsLockedState = newState;
-          // Button-Beschriftung je nach Status ändern
           lockChatsBtn.textContent = chatsLockedState ? 'Chats entsperren' : 'Sperre Chats';
           alert(result.message);
         } else {
@@ -48,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // API-Key Login
+  // Admin Login
   const loginForm = document.getElementById('adminLoginForm');
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -115,9 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  // Rendern der Request-Liste (mit Expand/Collapse)
+  // Requests rendern
   function renderRequestList() {
-    // Zähler aktualisieren
     document.getElementById('requestCount').textContent = fullRequestList.length;
     requestListDiv.innerHTML = '';
     const listToRender = requestListExpanded ? fullRequestList : fullRequestList.slice(0, 10);
@@ -144,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderRequestList();
   });
   
-  // Filterfunktion für Nutzerliste
+  // Filterfunktion für Nutzer
   function filterUserList(users) {
     const usernameFilter = filterUsernameInput.value.toLowerCase();
     const bannedFilter = filterBannedSelect.value;
@@ -171,9 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Rendern der Nutzerliste (mit Expand/Collapse und Filter)
+  // Nutzer rendern
   function renderUserList() {
-    // Zähler aktualisieren
     document.getElementById('userCount').textContent = fullUserList.length;
     userListDiv.innerHTML = '';
     const filtered = filterUserList(fullUserList);
@@ -221,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderUserList();
   });
   
-  // Rendern der Orga-Liste im Popup
+  // Orga-Liste rendern
   function renderOrgaList() {
     orgaListDiv.innerHTML = '';
     fullOrgaList.forEach(orga => {
@@ -238,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Event Listener für das Öffnen des Orga-Popups
+  // Orga-Popup
   const openOrgaPopupBtn = document.getElementById('openOrgaPopupBtn');
   const orgaPopupModal = document.getElementById('orgaPopupModal');
   const closeOrgaPopup = document.getElementById('closeOrgaPopup');
@@ -246,12 +243,11 @@ document.addEventListener('DOMContentLoaded', () => {
     orgaPopupModal.style.display = 'flex';
     loadOrgas();
   });
-  // Schließen des Orga-Popups (durch Klick auf Schließen-Button)
   closeOrgaPopup.addEventListener('click', () => {
     orgaPopupModal.style.display = 'none';
   });
   
-  // Event Listener für das Erstellen eines neuen Orga-Kontos
+  // Neues Orga-Konto erstellen
   const orgaCreateForm = document.getElementById('orgaCreateForm');
   orgaCreateForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -273,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Globale Funktionen für Admin-Operationen (über window)
+  // Globale Funktionen für Admin-Operationen
   window.approveRequest = async (username) => {
     try {
       const res = await fetch('/api/admin/approve?apiKey=' + encodeURIComponent(currentApiKey), {
@@ -369,9 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Globale Funktionen für Orga-Konten Bearbeitung
   window.editOrga = async (username) => {
-    // Öffne das Bearbeitungs-Popup und fülle die Felder
     document.getElementById('orgaEditUsername').value = username;
-    // Setze evtl. vorhandene Werte (hier aus fullOrgaList)
     const orga = fullOrgaList.find(o => o.username === username);
     if (orga) {
       document.getElementById('orgaEditPassword').value = orga.password;
@@ -394,7 +388,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Event Listener für das Orga-Bearbeitungs-Popup
   const orgaEditModal = document.getElementById('orgaEditModal');
   const closeOrgaEditModal = document.getElementById('closeOrgaEditModal');
   const orgaEditForm = document.getElementById('orgaEditForm');
@@ -442,12 +435,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === document.getElementById('orgaPopupModal')) {
       document.getElementById('orgaPopupModal').style.display = 'none';
     }
+    if (e.target === document.getElementById('newsletterModal')) {
+      document.getElementById('newsletterModal').style.display = 'none';
+    }
   });
 
+  // Vorschau aktualisieren
   function updateMediaPreview() {
-    document.getElementById('currentVideo').src = '/video1.mp4?' + new Date().getTime();
-    document.getElementById('currentImage1').src = '/bild1.png?' + new Date().getTime();
-    document.getElementById('currentImage2').src = '/bild2.png?' + new Date().getTime();
+    document.getElementById('currentVideo').src = '/api/media/video/video1.mp4?' + new Date().getTime();
+    for (let i = 1; i <= 19; i++) {
+      const imgElement = document.getElementById('currentImage' + i);
+      if (imgElement) {
+        imgElement.src = '/api/media/image/bild' + i + '.png?' + new Date().getTime();
+      }
+    }
   }
 
   const mediaUpdateForm = document.getElementById('mediaUpdateForm');
@@ -467,6 +468,71 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error(err);
         alert('Fehler beim Aktualisieren der Medien');
       }
+    });
+  }
+
+  // -------------------------------
+  // NEU: Newsletter-Abonnenten
+  // -------------------------------
+  let fullNewsletterList = [];
+
+  const loadNewsletterEmailsBtn = document.getElementById('loadNewsletterEmailsBtn');
+  const newsletterModal = document.getElementById('newsletterModal');
+  const closeNewsletterModal = document.getElementById('closeNewsletterModal');
+  const newsletterListDiv = document.getElementById('newsletterList');
+  const newsletterListContainer = document.getElementById('newsletterListContainer');
+  const exportNewsletterBtn = document.getElementById('exportNewsletterBtn');
+
+  if (loadNewsletterEmailsBtn) {
+    loadNewsletterEmailsBtn.addEventListener('click', () => {
+      loadNewsletterEmails();
+    });
+  }
+
+  async function loadNewsletterEmails() {
+    try {
+      const res = await fetch('/api/admin/newsletter-emails?apiKey=' + encodeURIComponent(currentApiKey));
+      if (res.ok) {
+        fullNewsletterList = await res.json();
+        renderNewsletterList();
+        newsletterModal.style.display = 'flex';
+      } else {
+        alert('Fehler beim Laden der Newsletter-Abonnenten');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Serverfehler beim Laden der Newsletter-Abonnenten');
+    }
+  }
+
+  function renderNewsletterList() {
+    newsletterListDiv.innerHTML = '';
+    fullNewsletterList.forEach(email => {
+      const div = document.createElement('div');
+      div.className = 'newsletter-item';
+      div.textContent = email;
+      newsletterListDiv.appendChild(div);
+    });
+  }
+
+  if (closeNewsletterModal) {
+    closeNewsletterModal.addEventListener('click', () => {
+      newsletterModal.style.display = 'none';
+    });
+  }
+
+  if (exportNewsletterBtn) {
+    exportNewsletterBtn.addEventListener('click', () => {
+      const text = fullNewsletterList.join('\n');
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'newsletter_emails.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     });
   }
 });

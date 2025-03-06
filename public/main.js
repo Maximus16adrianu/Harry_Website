@@ -1,14 +1,17 @@
-// Globale Funktion, die vom Hamburger-Button (Inline-Handler) aufgerufen wird
+// Diese Funktion wird global verfügbar gemacht, damit sie vom Button im HTML aufgerufen werden kann
 function toggleMobileNav(event) {
-  if (event) event.stopPropagation();
-  document.getElementById("mobileNav").classList.toggle("active");
+  event.stopPropagation();
+  const mobileNav = document.getElementById("mobileNav");
+  if (mobileNav) {
+    mobileNav.classList.toggle("active");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Galerie-Funktionalität
+  // Galerie-Funktionalität: Bilder 3 bis 19
   const images = [];
-  for (let i = 1; i <= 16; i++) {
-    images.push(`bild${i}.png`);
+  for (let i = 3; i <= 19; i++) {
+    images.push(`/api/media/image/bild${i}.png`);
   }
   let currentIndex = 0;
   const galleryImage = document.getElementById('gallery-image');
@@ -86,8 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Falls das Browserfenster von Mobil- zu PC-Ansicht wechselt,
-  // wird die mobile Navigation (falls geöffnet) automatisch geschlossen.
+  // Falls das Browserfenster von Mobil- zu PC-Ansicht wechselt, mobile Navigation schließen
   window.addEventListener("resize", function() {
     if (window.innerWidth > 768) {
       const mobileNav = document.getElementById("mobileNav");

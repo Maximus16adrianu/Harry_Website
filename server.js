@@ -305,6 +305,10 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
     console.error('Fehler beim Lesen des Chats', e);
     return res.status(500).json({ message: 'Fehler beim Lesen des Chats' });
   }
+  
+  // Entferne unerlaubte Nachrichten (nur für Nachrichten, die nicht von Organisatoren stammen)
+  chatData = removeDisallowedMessages(filePath, chatData);
+
   // Sortiere Nachrichten nach Timestamp (aufsteigend)
   chatData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   if (req.query.olderThan) {
@@ -319,6 +323,29 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
   }
   res.json(chatData);
 });
+
+// Hilfsfunktion: Entfernt (löscht) alle Nachrichten, die nicht von Organisatoren stammen
+// und in ihrem "message"-Feld eine Telefonnummer oder Email-Adresse enthalten.
+function removeDisallowedMessages(filePath, chatData) {
+  const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/;
+  const phoneRegex = /(\+?\d[\d\s\-]{7,}\d)/;
+  const cleanedData = chatData.filter(msg => {
+    // Nachrichten von Organisatoren (Rank beginnt mit "Organisator") werden nicht gefiltert
+    if (msg.rank && msg.rank.startsWith("Organisator")) {
+      return true;
+    }
+    if (msg.message && (emailRegex.test(msg.message) || phoneRegex.test(msg.message))) {
+      return false; // Nachricht enthält unerlaubte Inhalte → entfernen
+    }
+    return true;
+  });
+  // Wenn Nachrichten entfernt wurden, Datei aktualisieren
+  if (cleanedData.length !== chatData.length) {
+    writeJSON(filePath, cleanedData);
+  }
+  return cleanedData;
+}
+
 
 app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
@@ -336,6 +363,17 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   if (!message) {
     return res.status(400).json({ message: 'Nachricht fehlt' });
   }
+
+  // Nur bei Nachrichten von Nicht-Organisatoren die Nachricht auf Telefonnummer/Email prüfen
+  if (!req.user.isOrga) {
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/;
+    const phoneRegex = /(\+?\d[\d\s\-]{7,}\d)/;
+    if (emailRegex.test(message) || phoneRegex.test(message)) {
+      return res.status(400).json({ message: 'Nachricht enthält unerlaubte Inhalte (Telefonnummer oder Email-Adresse)' });
+    }
+  }
+  
+  // (Rate Limiting etc. bleibt wie gehabt)
   if (!req.user.isAdmin) {
     if (message.length > 1000) {
       return res.status(400).json({ message: 'Nachricht zu lang (maximal 1000 Zeichen erlaubt)' });
@@ -366,7 +404,6 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
     timestamp: new Date().toISOString(),
     pinned: false
   };
-  // Falls der Benutzer ein Organisator ist, setze den Rang inkl. Bundesland; andernfalls Admin (falls zutreffend)
   if (req.user.isOrga) {
     newMessage.rank = `Organisator (${req.user.bundesland})`;
   } else if (req.user.isAdmin) {
@@ -376,6 +413,7 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   writeJSON(filePath, chatData);
   res.json({ message: 'Nachricht gesendet', newMessage });
 });
+
 
 app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
@@ -545,14 +583,16 @@ app.post('/api/orga/chats', orgaAuth, (req, res) => {
       console.error('Fehler beim Parsen des Orga-Chats', e);
     }
   }
-  const newMessage = {
-    id: Date.now() + '_' + Math.floor(Math.random() * 1000),
-    user: req.orga.username,
-    message,
-    timestamp: new Date().toISOString(),
-    pinned: false
-  };
-  newMessage.rank = `Organisator (${req.orga.bundesland})`;
+const newMessage = {
+  id: Date.now() + '_' + Math.floor(Math.random() * 1000),
+  user: req.orga.username,
+  message,
+  timestamp: new Date().toISOString(),
+  pinned: false,
+  bundesland: req.orga.bundesland  // <-- add this
+};
+newMessage.rank = `Organisator (${req.orga.bundesland})`;
+
   chatData.push(newMessage);
   writeJSON(orgaChatFile, chatData);
   res.json({ message: 'Nachricht gesendet', newMessage });
@@ -863,7 +903,6 @@ app.post('/api/admin/demote', adminAuth, (req, res) => {
   res.json({ message: `Admin ${username} wurde herabgestuft` });
 });
 
-// Neuer Admin-Endpunkt: Update Media (Video und Bilder)
 const tempUploadsDir = path.join(__dirname, 'temp_uploads');
 if (!fs.existsSync(tempUploadsDir)) {
   fs.mkdirSync(tempUploadsDir, { recursive: true });
@@ -881,18 +920,29 @@ const mediaUpload = multer({ storage: mediaUploadStorage });
 
 app.post('/api/admin/update-media', adminAuth, mediaUpload.fields([
   { name: 'video', maxCount: 1 },
-  { name: 'image1', maxCount: 1 },
-  { name: 'image2', maxCount: 1 }
+  ...Array.from({ length: 19 }, (_, i) => ({ name: `image${i + 1}`, maxCount: 1 }))
 ]), (req, res) => {
-  const publicDir = path.join(__dirname, 'public');
-  const fileMapping = {
-    video: 'video1.mp4',
-    image1: 'bild1.png',
-    image2: 'bild2.png'
-  };
+  // Zielverzeichnisse
+  const videoDir = path.join(__dirname, 'private', 'homepage', 'videos');
+  const imagesDir = path.join(__dirname, 'private', 'homepage', 'images');
+  if (!fs.existsSync(videoDir)) { fs.mkdirSync(videoDir, { recursive: true }); }
+  if (!fs.existsSync(imagesDir)) { fs.mkdirSync(imagesDir, { recursive: true }); }
+  
+  // Mapping: Feldname -> Zieldateiname
+  const fileMapping = { video: 'video1.mp4' };
+  for (let i = 1; i <= 19; i++) {
+    fileMapping[`image${i}`] = `bild${i}.png`;
+  }
+  
   Object.entries(fileMapping).forEach(([field, targetFilename]) => {
     if (req.files && req.files[field]) {
-      const targetPath = path.join(publicDir, targetFilename);
+      let targetDir;
+      if (field === 'video') {
+        targetDir = videoDir;
+      } else if (field.startsWith('image')) {
+        targetDir = imagesDir;
+      }
+      const targetPath = path.join(targetDir, targetFilename);
       if (fs.existsSync(targetPath)) {
         fs.unlinkSync(targetPath);
       }
@@ -903,6 +953,28 @@ app.post('/api/admin/update-media', adminAuth, mediaUpload.fields([
   res.json({ message: 'Medien erfolgreich aktualisiert' });
 });
 
+// Endpoint für das Video
+app.get('/api/media/video/:filename', (req, res) => {
+  const filename = req.params.filename; // z.B. "video1.mp4"
+  const videoPath = path.join(__dirname, 'private', 'homepage', 'videos', filename);
+  if (fs.existsSync(videoPath)) {
+    res.sendFile(videoPath);
+  } else {
+    res.status(404).json({ message: 'Video nicht gefunden' });
+  }
+});
+
+// Endpoint für Bilder
+app.get('/api/media/image/:filename', (req, res) => {
+  const filename = req.params.filename; // z.B. "bild1.png"
+  const imagePath = path.join(__dirname, 'private', 'homepage', 'images', filename);
+  if (fs.existsSync(imagePath)) {
+    res.sendFile(imagePath);
+  } else {
+    res.status(404).json({ message: 'Bild nicht gefunden' });
+  }
+});
+
 // Neuer Admin-Endpunkt: Chats sperren/entsperren
 app.post('/api/admin/chats-lock', adminAuth, (req, res) => {
   const { lock } = req.body;
@@ -911,6 +983,65 @@ app.post('/api/admin/chats-lock', adminAuth, (req, res) => {
   }
   chatsLocked = lock;
   res.json({ message: `Chats wurden ${lock ? 'gesperrt' : 'entsperrt'}` });
+});
+
+// --------------------------------------
+// Newsletter-Route für die Anmeldung
+// --------------------------------------
+app.post('/newsletter/subscribe', (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: 'Keine E-Mail-Adresse angegeben' });
+  }
+  // Optionale serverseitige E-Mail-Validierung
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    return res.status(400).json({ message: 'Ungültige E-Mail-Adresse' });
+  }
+
+  const emailFilePath = path.join(__dirname, 'private', 'email.json');
+
+  let emails = [];
+  // Prüfen, ob die Datei existiert
+  if (fs.existsSync(emailFilePath)) {
+    try {
+      emails = JSON.parse(fs.readFileSync(emailFilePath, 'utf8'));
+    } catch (err) {
+      console.error('Fehler beim Lesen der email.json:', err);
+    }
+  }
+  if (!Array.isArray(emails)) {
+    emails = [];
+  }
+
+  // E-Mail nur speichern, wenn sie noch nicht vorhanden ist
+  if (!emails.includes(email)) {
+    emails.push(email);
+    fs.writeFileSync(emailFilePath, JSON.stringify(emails, null, 2), 'utf8');
+  }
+
+  return res.json({ message: 'E-Mail erfolgreich hinzugefügt' });
+});
+
+// --------------------------------------
+// Admin-Route, um alle Newsletter-E-Mails abzufragen
+// --------------------------------------
+app.get('/api/admin/newsletter-emails', adminAuth, (req, res) => {
+  const emailFilePath = path.join(__dirname, 'private', 'email.json');
+  if (!fs.existsSync(emailFilePath)) {
+    // Falls noch keine Datei existiert, einfach leeres Array zurückgeben
+    return res.json([]);
+  }
+  try {
+    const emails = JSON.parse(fs.readFileSync(emailFilePath, 'utf8'));
+    if (!Array.isArray(emails)) {
+      return res.json([]);
+    }
+    return res.json(emails);
+  } catch (err) {
+    console.error('Fehler beim Lesen der email.json:', err);
+    return res.status(500).json({ message: 'Fehler beim Lesen der E-Mail-Datei' });
+  }
 });
 
 app.listen(PORT, () => {

@@ -16,28 +16,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modal');
     const modalImg = document.getElementById('modal-img');
     const closeModal = document.getElementById('close-modal');
-  
+
     let oldestTimestamp = null;
     let loadingOlder = false;
-  
+
     // Prüfen, ob der Chat-Bereich am unteren Ende ist
     function isScrolledToBottom() {
       return (chatMessages.scrollTop + chatMessages.clientHeight) >= (chatMessages.scrollHeight - 5);
     }
-  
+
     // Automatischer Login (Flag in localStorage)
     if (localStorage.getItem('orgaLoggedIn') === 'true') {
       loginContainer.style.display = 'none';
       chatContainer.style.display = 'block';
       loadNewMessages();
     }
-  
+
     // Orga Login
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const orgaUsername = document.getElementById('orgaUsername').value;
       const orgaPassword = document.getElementById('orgaPassword').value;
-  
+
       const res = await fetch('/api/orga/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,14 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
         loginError.textContent = data.message || 'Login fehlgeschlagen';
       }
     });
-  
+
     // Orga Logout
     logoutBtn.addEventListener('click', async () => {
       await fetch('/api/orga/logout', { method: 'POST' });
       localStorage.removeItem('orgaLoggedIn');
       location.reload();
     });
-  
+
     // Sende Textnachricht
     chatForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -80,13 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(data.message || 'Fehler beim Senden der Nachricht');
       }
     });
-  
+
     // Sende Bildnachricht
     uploadBtn.addEventListener('click', async () => {
       if (!imageInput.files || imageInput.files.length === 0) return;
       const formData = new FormData();
       formData.append('image', imageInput.files[0]);
-  
+
       const res = await fetch('/api/orga/chats/image', {
         method: 'POST',
         body: formData
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(data.message || 'Fehler beim Hochladen des Bildes');
       }
     });
-  
+
     // Bildvergrößerung: Öffne Modal beim Klick auf ein Bild
     chatMessages.addEventListener('click', (e) => {
       if (e.target.tagName.toLowerCase() === 'img') {
@@ -108,14 +108,15 @@ document.addEventListener('DOMContentLoaded', () => {
         modalImg.src = e.target.src;
       }
     });
-  
+
     // Schließe Modal
     closeModal.addEventListener('click', () => {
       modal.style.display = 'none';
     });
-  
+
     // Laden neuer Nachrichten (limit 20)
     async function loadNewMessages() {
+      // Nur laden, wenn man am Ende gescrollt ist
       if (!isScrolledToBottom()) return;
       const res = await fetch('/api/orga/chats?limit=20');
       if (res.ok) {
@@ -123,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMessages(messages, false);
       }
     }
-  
+
     // Laden älterer Nachrichten (beim Scrollen nach oben)
     async function loadOlderMessages() {
       if (loadingOlder) return;
@@ -141,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       loadingOlder = false;
     }
-  
+
     // Rendert Nachrichten – prepend bei älteren Nachrichten
     function renderMessages(messages, prepend) {
       if (messages.length > 0) {
@@ -168,21 +169,35 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
     }
-  
+
     // Erzeugt ein Message-DIV inklusive Pin-Button
     function createMessageDiv(msg) {
       const msgDiv = document.createElement('div');
       msgDiv.className = 'message';
-      let content = `<strong>${msg.user} (${msg.bundesland}):</strong><br>`;
+
+      // --- Fix: Bundesland nur anzeigen, wenn vorhanden ---
+      const displayBundesland = msg.bundesland ? msg.bundesland : '';
+      let content = `<strong>${msg.user}`;
+      if (displayBundesland) {
+        content += ` (${displayBundesland})`;
+      }
+      content += `:</strong><br>`;
+
+      // Falls Bild vorhanden, anhängen
       if (msg.image) {
         content += `<img src="/pictures/${msg.image}" alt="Bild"> <br>`;
       }
+
+      // Falls Textnachricht vorhanden, anhängen
       if (msg.message) {
         content += msg.message;
       }
+
+      // Timestamp anzeigen
       content += `<div class="timestamp">${new Date(msg.timestamp).toLocaleString()}</div>`;
       msgDiv.innerHTML = content;
-      // Füge für Organisatoren den Pin-Button hinzu
+
+      // Pin-/Lösen-Button hinzufügen
       const pinBtn = document.createElement('button');
       pinBtn.className = 'pin-btn';
       pinBtn.textContent = msg.pinned ? 'Lösen' : 'Anpinnen';
@@ -202,9 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       msgDiv.appendChild(pinBtn);
+
       return msgDiv;
     }
-  
+
     // Event-Listener für Scrollen: Laden älterer Nachrichten, wenn nach oben gescrollt wird
     chatMessages.addEventListener('scroll', () => {
       if (chatMessages.scrollTop < 50) {
@@ -213,10 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
         loadNewMessages();
       }
     });
-  
-    // Periodisches Neuladen neuer Nachrichten (jede Sekunde), wenn unten gescrollt wird
+
+    // Periodisches Neuladen neuer Nachrichten (jede Sekunde), wenn man unten ist
     setInterval(loadNewMessages, 1000);
-  
+
     // Pinned Nachrichten anzeigen
     pinnedBtn.addEventListener('click', async () => {
       const res = await fetch('/api/orga/chats/pinned');
@@ -226,12 +242,12 @@ document.addEventListener('DOMContentLoaded', () => {
         pinnedContainer.style.display = 'block';
       }
     });
-  
+
     // Schließen der Pinned Nachrichten Ansicht
     closePinnedBtn.addEventListener('click', () => {
       pinnedContainer.style.display = 'none';
     });
-  
+
     // Rendert angepinnte Nachrichten in einem separaten Container
     function renderPinnedMessages(messages) {
       pinnedMessages.innerHTML = '';
@@ -241,4 +257,3 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
-  
