@@ -251,6 +251,11 @@ button.secondary {
   margin-top: 24px;
 }
 
+/* Additional styling for Accept All button in the request section */
+#acceptAllBtn {
+  margin-left: 8px;
+}
+
 /* Responsive Anpassungen */
 @media (max-width: 768px) {
   main {

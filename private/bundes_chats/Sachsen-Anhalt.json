@@ -1,1 +1,18 @@
-[]
+[
+    {
+        "id": "1741435683054_899",
+        "user": "Sasa1987",
+        "image": "1741435683053_859.jpg",
+        "timestamp": "2025-03-08T12:08:03.054Z",
+        "pinned": false,
+        "rank": "Organisator (Schleswig-Holstein)"
+    },
+    {
+        "id": "1741435689676_533",
+        "user": "Sasa1987",
+        "message": "Herzlich Willkommen an alle neuen , weitere Infos folgen ",
+        "timestamp": "2025-03-08T12:08:09.676Z",
+        "pinned": false,
+        "rank": "Organisator (Schleswig-Holstein)"
+    }
+]

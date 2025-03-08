@@ -57,36 +57,6 @@ function writeJSON(filePath, data) {
   }
 }
 
-// Funktion zum automatischen Genehmigen von Anfragen, die älter als 10 Minuten sind
-function autoApproveRequests() {
-  const pending = readJSON(requestAccessFile);
-  let users = readJSON(usersFile);
-  const now = Date.now();
-  const TEN_MINUTES = 3 * 60 * 1000; // 10 Minuten in Millisekunden
-
-  // Filtere alle Anfragen, die noch nicht 10 Minuten alt sind
-  const remaining = pending.filter(request => {
-    const requestTime = new Date(request.requestedAt).getTime();
-    if (now - requestTime >= TEN_MINUTES) {
-      // Automatische Genehmigung: Felder setzen und zu users.json hinzufügen
-      request.isAdmin = false;
-      request.locked = false;
-      users.push(request);
-      return false; // Entferne aus pending
-    }
-    return true; // Behalte in pending
-  });
-
-  if (pending.length !== remaining.length) {
-    writeJSON(usersFile, users);
-    writeJSON(requestAccessFile, remaining);
-    console.log('Automatische Genehmigung durchlaufen');
-  }
-}
-
-// Überprüfe alle 10 Sekunden automatisch die Anfragen
-setInterval(autoApproveRequests, 10000);
-
 // In-Memory-Store für Rate Limiting (nur für normale Nutzer)
 const userMessageTimestamps = {};
 
@@ -376,6 +346,7 @@ function removeDisallowedMessages(filePath, chatData) {
   return cleanedData;
 }
 
+
 app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
   if (chatName === 'Admin_chat' && !req.user.isAdmin) {
@@ -442,6 +413,7 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   writeJSON(filePath, chatData);
   res.json({ message: 'Nachricht gesendet', newMessage });
 });
+
 
 app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
@@ -528,6 +500,44 @@ app.delete('/api/chats/:chatName', authMiddleware, (req, res) => {
 /* ---------------------------
    Endpunkte für Organisatoren
 ----------------------------*/
+// Organisator-Konto per API-Key erstellen (öffentliche Erstellung ist NICHT vorgesehen – siehe Admin)
+app.post('/api/orga/create', (req, res) => {
+  const { apiKey, username, password, bundesland } = req.body;
+  if (apiKey !== API_KEY) {
+    return res.status(403).json({ message: 'Ungültiger API Key' });
+  }
+  if (!username || !password || !bundesland) {
+    return res.status(400).json({ message: 'Username, Passwort und Bundesland erforderlich' });
+  }
+  let orgas = readJSON(orgaFile);
+  if (orgas.find(o => o.username === username)) {
+    return res.status(400).json({ message: 'Organisator existiert bereits' });
+  }
+  orgas.push({ username, password, bundesland });
+  writeJSON(orgaFile, orgas);
+  res.json({ message: 'Organisator-Konto erstellt' });
+});
+
+// Orga Login
+app.post('/api/orga/login', (req, res) => {
+  const { username, password } = req.body;
+  let orgas = readJSON(orgaFile);
+  const orga = orgas.find(o => o.username === username && o.password === password);
+  if (!orga) {
+    return res.status(401).json({ message: 'Ungültige Zugangsdaten' });
+  }
+  res.cookie('orgaUsername', username, { httpOnly: true });
+  res.cookie('orgaPassword', password, { httpOnly: true });
+  res.json({ message: 'Organisator erfolgreich eingeloggt' });
+});
+
+// Orga Logout
+app.post('/api/orga/logout', (req, res) => {
+  res.clearCookie('orgaUsername');
+  res.clearCookie('orgaPassword');
+  res.json({ message: 'Organisator erfolgreich ausgeloggt' });
+});
+
 // GET Orga-Chat: Liefert paginierte Nachrichten (limit, olderThan)
 app.get('/api/orga/chats', orgaAuth, (req, res) => {
   const orgaChatFile = path.join(chatsDir, 'orga_chat.json');
@@ -573,15 +583,15 @@ app.post('/api/orga/chats', orgaAuth, (req, res) => {
       console.error('Fehler beim Parsen des Orga-Chats', e);
     }
   }
-  const newMessage = {
-    id: Date.now() + '_' + Math.floor(Math.random() * 1000),
-    user: req.orga.username,
-    message,
-    timestamp: new Date().toISOString(),
-    pinned: false,
-    bundesland: req.orga.bundesland
-  };
-  newMessage.rank = `Organisator (${req.orga.bundesland})`;
+const newMessage = {
+  id: Date.now() + '_' + Math.floor(Math.random() * 1000),
+  user: req.orga.username,
+  message,
+  timestamp: new Date().toISOString(),
+  pinned: false,
+  bundesland: req.orga.bundesland  // <-- add this
+};
+newMessage.rank = `Organisator (${req.orga.bundesland})`;
 
   chatData.push(newMessage);
   writeJSON(orgaChatFile, chatData);

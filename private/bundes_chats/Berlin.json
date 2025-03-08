@@ -1,1 +1,34 @@
-[]
+[
+    {
+        "id": "1741435958473_237",
+        "user": "Sasa1987",
+        "image": "1741435958472_313.jpg",
+        "timestamp": "2025-03-08T12:12:38.473Z",
+        "pinned": false,
+        "rank": "Organisator (Schleswig-Holstein)"
+    },
+    {
+        "id": "1741436919133_437",
+        "user": "Klimamann",
+        "message": "Hallo schön das Ihr Interesse habt. Wir wollen den Politikern am 22.03.2025 zeigen das wir Viele sind die mit ihrer ganzen Politik nicht einverstanden sind. Alle Informationen für die Teilnahme stellen wir hier zur Verfügung",
+        "timestamp": "2025-03-08T12:28:39.133Z",
+        "pinned": false,
+        "rank": "Organisator (Berlin)"
+    },
+    {
+        "id": "1741437122026_395",
+        "user": "Klimamann",
+        "message": "In Berlin ist ein Verbund Aufmarsch geplant. Fußgänger und Fahrzeuge. Wie weit uns die zuständigen Behörden noch versuchen Vorschriften zumachen wird hier mittgeteilt. ",
+        "timestamp": "2025-03-08T12:32:02.026Z",
+        "pinned": false,
+        "rank": "Organisator (Berlin)"
+    },
+    {
+        "id": "1741437293138_183",
+        "user": "Klimamann",
+        "message": "Ich möchte alle Teilnehmer bitte zu beachten wir sind Parteilos und würden gerne nur die Deutschland oder Friedensfahne sehen. Alle Organisatoren sind einfache Bürger. Also eine Demo von Bürger für Bürger ",
+        "timestamp": "2025-03-08T12:34:53.138Z",
+        "pinned": false,
+        "rank": "Organisator (Berlin)"
+    }
+]

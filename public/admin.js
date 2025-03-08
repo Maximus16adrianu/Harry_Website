@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminPanel = document.getElementById('adminPanel');
   const requestListDiv = document.getElementById('requestList');
   const toggleRequestsBtn = document.getElementById('toggleRequests');
+  const acceptAllBtn = document.getElementById('acceptAllBtn'); // New button for bulk approval
   const userListDiv = document.getElementById('userList');
   const toggleUsersBtn = document.getElementById('toggleUsers');
   const orgaListDiv = document.getElementById('orgaList');
@@ -142,6 +143,33 @@ document.addEventListener('DOMContentLoaded', () => {
     requestListExpanded = !requestListExpanded;
     renderRequestList();
   });
+
+  // New "Accept All" button event listener
+  if (acceptAllBtn) {
+    acceptAllBtn.addEventListener('click', async () => {
+      if (!confirm('Soll wirklich alle Anfragen akzeptiert werden?')) return;
+      try {
+        // Loop through each request and send an approval request
+        for (const req of fullRequestList) {
+          const res = await fetch('/api/admin/approve?apiKey=' + encodeURIComponent(currentApiKey), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: req.username })
+          });
+          if (!res.ok) {
+            const result = await res.json();
+            console.error('Fehler bei der Akzeptierung von', req.username, result.message);
+          }
+        }
+        alert('Alle Anfragen wurden akzeptiert.');
+        loadRequests();
+        loadUsers();
+      } catch (err) {
+        console.error(err);
+        alert('Fehler beim Akzeptieren aller Anfragen.');
+      }
+    });
+  }
 
   // Filterfunktion für Nutzer
   function filterUserList(users) {
