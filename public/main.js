@@ -1,4 +1,4 @@
-// Diese Funktion wird global verfügbar gemacht, damit sie vom Button im HTML aufgerufen werden kann
+/* Diese Funktion wird global verfügbar gemacht, damit sie vom Button im HTML aufgerufen werden kann */
 function toggleMobileNav(event) {
   event.stopPropagation();
   const mobileNav = document.getElementById("mobileNav");

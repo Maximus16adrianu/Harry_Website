@@ -133,9 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const img = document.createElement('img');
           img.src = '/pictures/' + msg.image;
           img.alt = 'Hochgeladenes Bild';
-          img.style.maxWidth = '500px';
-          img.style.display = 'block';
-          img.style.marginTop = '5px';
+          // Styling erfolgt über CSS
           div.appendChild(img);
         }
 
@@ -196,9 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const img = document.createElement('img');
           img.src = '/pictures/' + msg.image;
           img.alt = 'Hochgeladenes Bild';
-          img.style.maxWidth = '500px';
-          img.style.display = 'block';
-          img.style.marginTop = '5px';
+          // Styling erfolgt über CSS
           div.appendChild(img);
         }
 
