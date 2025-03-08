@@ -62,7 +62,7 @@ function autoApproveRequests() {
   const pending = readJSON(requestAccessFile);
   let users = readJSON(usersFile);
   const now = Date.now();
-  const TEN_MINUTES = 10 * 60 * 1000; // 10 Minuten in Millisekunden
+  const TEN_MINUTES = 3 * 60 * 1000; // 10 Minuten in Millisekunden
 
   // Filtere alle Anfragen, die noch nicht 10 Minuten alt sind
   const remaining = pending.filter(request => {

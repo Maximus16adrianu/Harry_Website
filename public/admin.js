@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let fullUserList = [];
   let userListExpanded = false;
   let fullOrgaList = [];
+  let fullNewsletterList = [];
 
   // Lock Chats Button
   const lockChatsBtn = document.getElementById('lockChatsBtn');
@@ -46,14 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  
+
   // Admin Login
   const loginForm = document.getElementById('adminLoginForm');
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(loginForm);
     const enteredKey = formData.get('apiKey');
-  
+
     try {
       const testUrl = '/api/admin/requests?apiKey=' + encodeURIComponent(enteredKey);
       const testRes = await fetch(testUrl);
@@ -72,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Fehler beim Prüfen des API Keys');
     }
   });
-  
+
   // Requests laden
   async function loadRequests() {
     try {
@@ -86,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
     }
   }
-  
+
   // Nutzer laden
   async function loadUsers() {
     try {
@@ -100,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
     }
   }
-  
+
   // Orga-Konten laden
   async function loadOrgas() {
     try {
@@ -113,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
     }
   }
-  
+
   // Requests rendern
   function renderRequestList() {
     document.getElementById('requestCount').textContent = fullRequestList.length;
@@ -136,18 +137,18 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleRequestsBtn.classList.add('hidden');
     }
   }
-  
+
   toggleRequestsBtn.addEventListener('click', () => {
     requestListExpanded = !requestListExpanded;
     renderRequestList();
   });
-  
+
   // Filterfunktion für Nutzer
   function filterUserList(users) {
     const usernameFilter = filterUsernameInput.value.toLowerCase();
     const bannedFilter = filterBannedSelect.value;
     const adminFilter = filterAdminSelect.value;
-  
+
     return users.filter(user => {
       let match = true;
       if (usernameFilter && !user.username.toLowerCase().includes(usernameFilter)) {
@@ -168,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return match;
     });
   }
-  
+
   // Nutzer rendern
   function renderUserList() {
     document.getElementById('userCount').textContent = fullUserList.length;
@@ -207,17 +208,17 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleUsersBtn.classList.add('hidden');
     }
   }
-  
+
   applyFiltersBtn.addEventListener('click', () => {
     userListExpanded = false;
     renderUserList();
   });
-  
+
   toggleUsersBtn.addEventListener('click', () => {
     userListExpanded = !userListExpanded;
     renderUserList();
   });
-  
+
   // Orga-Liste rendern
   function renderOrgaList() {
     orgaListDiv.innerHTML = '';
@@ -234,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
       orgaListDiv.appendChild(div);
     });
   }
-  
+
   // Orga-Popup
   const openOrgaPopupBtn = document.getElementById('openOrgaPopupBtn');
   const orgaPopupModal = document.getElementById('orgaPopupModal');
@@ -246,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
   closeOrgaPopup.addEventListener('click', () => {
     orgaPopupModal.style.display = 'none';
   });
-  
+
   // Neues Orga-Konto erstellen
   const orgaCreateForm = document.getElementById('orgaCreateForm');
   orgaCreateForm.addEventListener('submit', async (e) => {
@@ -268,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
     }
   });
-  
+
   // Globale Funktionen für Admin-Operationen
   window.approveRequest = async (username) => {
     try {
@@ -285,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
     }
   };
-  
+
   window.rejectRequest = async (username) => {
     try {
       const res = await fetch('/api/admin/reject?apiKey=' + encodeURIComponent(currentApiKey), {
@@ -300,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
     }
   };
-  
+
   window.promoteUser = async (username) => {
     try {
       const res = await fetch('/api/admin/promote?apiKey=' + encodeURIComponent(currentApiKey), {
@@ -315,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
     }
   };
-  
+
   window.demoteUser = async (username) => {
     try {
       const res = await fetch('/api/admin/demote?apiKey=' + encodeURIComponent(currentApiKey), {
@@ -330,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
     }
   };
-  
+
   window.banUser = async (username) => {
     try {
       const res = await fetch('/api/admin/ban', {
@@ -348,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(error);
     }
   };
-  
+
   window.unbanUser = async (username) => {
     try {
       const res = await fetch('/api/admin/unban?apiKey=' + encodeURIComponent(currentApiKey), {
@@ -474,8 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------------------------------
   // NEU: Newsletter-Abonnenten
   // -------------------------------
-  let fullNewsletterList = [];
-
   const loadNewsletterEmailsBtn = document.getElementById('loadNewsletterEmailsBtn');
   const newsletterModal = document.getElementById('newsletterModal');
   const closeNewsletterModal = document.getElementById('closeNewsletterModal');
@@ -523,16 +522,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (exportNewsletterBtn) {
     exportNewsletterBtn.addEventListener('click', () => {
-      const text = fullNewsletterList.join('\n');
-      const blob = new Blob([text], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'newsletter_emails.txt';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const text = JSON.stringify(fullNewsletterList, null, 2);
+      downloadFile('newsletter_emails.txt', text);
+    });
+  }
+
+  // -------------------------------
+  // NEU: "Alle exportieren" Button (JSON-Export)
+  // -------------------------------
+  function downloadFile(filename, text) {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  const exportAllBtn = document.getElementById('exportAllBtn');
+  if (exportAllBtn) {
+    exportAllBtn.addEventListener('click', () => {
+      // Orga-Konten exportieren (als JSON)
+      const orgaJson = JSON.stringify(fullOrgaList, null, 2);
+      downloadFile('orga.txt', orgaJson);
+
+      // Admins exportieren (alle Nutzer mit isAdmin true als JSON)
+      const adminsJson = JSON.stringify(fullUserList.filter(u => u.isAdmin), null, 2);
+      downloadFile('admins.txt', adminsJson);
+
+      // Newsletter-Abonnenten exportieren (als JSON)
+      const newsletterJson = JSON.stringify(fullNewsletterList, null, 2);
+      downloadFile('email.txt', newsletterJson);
+
+      // Alle Nutzer exportieren (alle Nutzer mit isAdmin false als JSON)
+      const usersJson = JSON.stringify(fullUserList.filter(u => !u.isAdmin), null, 2);
+      downloadFile('users.txt', usersJson);
+
+      // Request-Zugriffe exportieren (als JSON)
+      const requestAccessJson = JSON.stringify(fullRequestList, null, 2);
+      downloadFile('requestacces.txt', requestAccessJson);
     });
   }
 });
