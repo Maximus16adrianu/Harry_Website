@@ -60,36 +60,27 @@ function writeJSON(filePath, data) {
 // In-Memory-Store für Rate Limiting (nur für normale Nutzer in Chat-Nachrichten)
 const userMessageTimestamps = {};
 
-// === Neue globale Variablen für Account-bezogenes Rate Limiting ===
+// === Globale Variablen für account-bezogenes Rate Limiting (pro IP) ===
 const bannedIPs = new Set();
 const accountRateLimit = {}; // { ip: count }
-const ACCOUNT_THRESHOLD = 500; // Schwellenwert pro Minute
+const ACCOUNT_THRESHOLD = 500; // pro Minute
 
-// Neue Middleware für Account-Registrierung und Login
+// Neue Middleware für Account-Registrierung und Login (pro IP)
 function accountRateLimiter(req, res, next) {
-  // Hole die IP-Adresse aus der Anfrage
   const ip = req.ip || req.connection.remoteAddress;
-
-  // Prüfe, ob die IP bereits gebannt ist
   if (bannedIPs.has(ip)) {
     return res.status(403).json({ message: 'Ihre IP wurde dauerhaft wegen Spam blockiert.' });
   }
-  
-  // Rate Limiting nur für /api/signup und /api/login
   if (req.path === '/api/signup' || req.path === '/api/login') {
     accountRateLimit[ip] = (accountRateLimit[ip] || 0) + 1;
-    
-    // Falls die Schwelle überschritten wird, bannen
     if (accountRateLimit[ip] > ACCOUNT_THRESHOLD) {
       bannedIPs.add(ip);
       return res.status(403).json({ message: 'Ihre IP wurde dauerhaft wegen übermäßigen Account-Spammings blockiert.' });
     }
   }
-  
   next();
 }
 
-// Setze die Account-RateLimiter-Middleware nur für POST-Anfragen an /api/signup und /api/login ein
 app.use((req, res, next) => {
   if (req.method === 'POST' && (req.path === '/api/signup' || req.path === '/api/login')) {
     return accountRateLimiter(req, res, next);
@@ -97,21 +88,36 @@ app.use((req, res, next) => {
   next();
 });
 
-// Setze den Zähler jede Minute zurück
+// Reset pro IP-Zähler jede Minute
 setInterval(() => {
   for (const ip in accountRateLimit) {
     accountRateLimit[ip] = 0;
   }
 }, 60000);
 
-// === Neue globale Variablen für die stündliche Newsletter-Anmelde-Grenze ===
+// === Globale Variablen für die stündliche Newsletter-Anmelde-Grenze ===
 let newsletterCount = 0;
 const NEWSLETTER_LIMIT = 30;
-
-// Setze den Newsletter-Zähler jede Stunde zurück
 setInterval(() => {
   newsletterCount = 0;
 }, 3600000);
+
+// === Neue globale Variablen für das globale Account-Registrierungs-Limit ===
+let globalRegistrationCount = 0;
+const REGISTRATION_LIMIT = 50;
+let registrationLocked = false;
+// Reset globaler Registrierungszähler jede Minute
+setInterval(() => {
+  globalRegistrationCount = 0;
+}, 60000);
+
+// Funktion zum Sperren der Registrierung für 5 Minuten
+function lockRegistrations() {
+  registrationLocked = true;
+  setTimeout(() => {
+    registrationLocked = false;
+  }, 5 * 60 * 1000);
+}
 
 // Multer-Konfiguration für Bilder-Upload
 const storage = multer.diskStorage({
@@ -127,7 +133,6 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: function (req, file, cb) {
-    // Erlaubt Bild-Uploads für Admins (über req.user) und Organisatoren (über req.orga)
     if ((req.user && req.user.isAdmin) || req.orga) {
       cb(null, true);
     } else {
@@ -142,10 +147,8 @@ const upload = multer({
 function authMiddleware(req, res, next) {
   const { username, password } = req.cookies;
   if (username && password) {
-    // Suche in users.json
     let users = readJSON(usersFile);
     let user = users.find(u => u.username === username && u.password === password);
-    // Falls nicht gefunden, in admins.json suchen
     if (!user) {
       let admins = readJSON(adminsFile);
       let adminUser = admins.find(a => a.username === username && a.password === password);
@@ -162,13 +165,11 @@ function authMiddleware(req, res, next) {
       return next();
     }
   }
-  // Falls keine normalen Nutzer-Cookies, versuche Organisator-Cookies
   const { orgaUsername, orgaPassword } = req.cookies;
   if (orgaUsername && orgaPassword) {
     let orgas = readJSON(orgaFile);
     const orga = orgas.find(o => o.username === orgaUsername && o.password === orgaPassword);
     if (orga) {
-      // Organisatoren erhalten Admin-Rechte in normalen Chats, werden aber als Organisator markiert
       req.user = { username: orga.username, isAdmin: true, isOrga: true, bundesland: orga.bundesland };
       return next();
     } else {
@@ -208,7 +209,6 @@ function adminAuth(req, res, next) {
 
 /* ---------------------------
    Middleware: Organisator-Authentifizierung
-   - Organisatoren haben eigene Cookies: "orgaUsername" und "orgaPassword"
 ----------------------------*/
 function orgaAuth(req, res, next) {
   const { orgaUsername, orgaPassword } = req.cookies;
@@ -297,6 +297,22 @@ app.post('/api/logout', (req, res) => {
 
 app.post('/api/signup', (req, res) => {
   const { username, password } = req.body;
+  
+  // Username-Längenbegrenzung: maximal 15 Zeichen
+  if (username.length > 15) {
+    return res.status(400).json({ message: 'Username darf maximal 15 Zeichen lang sein.' });
+  }
+  
+  // Globales Rate-Limit für Account-Registrierungen (über alle IPs)
+  if (registrationLocked) {
+    return res.status(429).json({ message: 'Zu viele Registrierungen. Bitte versuchen Sie es in 5 Minuten erneut.' });
+  }
+  if (globalRegistrationCount >= REGISTRATION_LIMIT) {
+    lockRegistrations();
+    return res.status(429).json({ message: 'Zu viele Registrierungen. Bitte versuchen Sie es in 5 Minuten erneut.' });
+  }
+  globalRegistrationCount++;
+
   if (!username || !password) {
     return res.status(400).json({ message: 'Username und Passwort erforderlich' });
   }
@@ -333,7 +349,6 @@ app.get('/api/channels', authMiddleware, (req, res) => {
     if (!req.user.isAdmin) {
       channels = channels.filter(ch => ch !== 'Admin_chat');
     }
-    // Filtere den Orga-Chat aus, damit er nicht in der Liste erscheint (Zugriff über die eigenen Endpunkte)
     channels = channels.filter(ch => ch !== 'orga_chat');
     res.json(channels);
   });
@@ -358,11 +373,7 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
     console.error('Fehler beim Lesen des Chats', e);
     return res.status(500).json({ message: 'Fehler beim Lesen des Chats' });
   }
-  
-  // Entferne unerlaubte Nachrichten (nur für Nachrichten, die nicht von Organisatoren stammen)
   chatData = removeDisallowedMessages(filePath, chatData);
-
-  // Sortiere Nachrichten nach Timestamp (aufsteigend)
   chatData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   if (req.query.olderThan) {
     const olderThanDate = new Date(req.query.olderThan);
@@ -377,22 +388,18 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
   res.json(chatData);
 });
 
-// Hilfsfunktion: Entfernt (löscht) alle Nachrichten, die nicht von Organisatoren stammen
-// und in ihrem "message"-Feld eine Telefonnummer oder Email-Adresse enthalten.
 function removeDisallowedMessages(filePath, chatData) {
   const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/;
   const phoneRegex = /(\+?\d[\d\s\-]{7,}\d)/;
   const cleanedData = chatData.filter(msg => {
-    // Nachrichten von Organisatoren (Rank beginnt mit "Organisator") werden nicht gefiltert
     if (msg.rank && msg.rank.startsWith("Organisator")) {
       return true;
     }
     if (msg.message && (emailRegex.test(msg.message) || phoneRegex.test(msg.message))) {
-      return false; // Nachricht enthält unerlaubte Inhalte → entfernen
+      return false;
     }
     return true;
   });
-  // Wenn Nachrichten entfernt wurden, Datei aktualisieren
   if (cleanedData.length !== chatData.length) {
     writeJSON(filePath, cleanedData);
   }
@@ -407,7 +414,6 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   if (chatName === 'orga_chat') {
     return res.status(403).json({ message: 'Kein Zugriff auf Orga Chat. Bitte als Organisator einloggen.' });
   }
-  // Überprüfe Sperrstatus: Wenn Chats gesperrt sind, dürfen nur Admins oder Organisatoren posten
   if (chatsLocked && !req.user.isAdmin && !req.user.isOrga) {
     return res.status(403).json({ message: 'Chats sind gesperrt' });
   }
@@ -415,8 +421,6 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   if (!message) {
     return res.status(400).json({ message: 'Nachricht fehlt' });
   }
-
-  // Nur bei Nachrichten von Nicht-Organisatoren die Nachricht auf Telefonnummer/Email prüfen
   if (!req.user.isOrga) {
     const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/;
     const phoneRegex = /(\+?\d[\d\s\-]{7,}\d)/;
@@ -424,8 +428,6 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
       return res.status(400).json({ message: 'Nachricht enthält unerlaubte Inhalte (Telefonnummer oder Email-Adresse)' });
     }
   }
-  
-  // (Rate Limiting etc. bleibt wie gehabt)
   if (!req.user.isAdmin) {
     if (message.length > 1000) {
       return res.status(400).json({ message: 'Nachricht zu lang (maximal 1000 Zeichen erlaubt)' });
@@ -468,7 +470,6 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
 
 app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
-  // Überprüfe Sperrstatus: Wenn Chats gesperrt sind, dürfen nur Admins oder Organisatoren posten
   if (chatsLocked && !req.user.isAdmin && !req.user.isOrga) {
     return res.status(403).json({ message: 'Chats sind gesperrt' });
   }
@@ -551,7 +552,6 @@ app.delete('/api/chats/:chatName', authMiddleware, (req, res) => {
 /* ---------------------------
    Endpunkte für Organisatoren
 ----------------------------*/
-// Organisator-Konto per API-Key erstellen (öffentliche Erstellung ist NICHT vorgesehen – siehe Admin)
 app.post('/api/orga/create', (req, res) => {
   const { apiKey, username, password, bundesland } = req.body;
   if (apiKey !== API_KEY) {
@@ -569,7 +569,6 @@ app.post('/api/orga/create', (req, res) => {
   res.json({ message: 'Organisator-Konto erstellt' });
 });
 
-// Orga Login
 app.post('/api/orga/login', (req, res) => {
   const { username, password } = req.body;
   let orgas = readJSON(orgaFile);
@@ -582,14 +581,12 @@ app.post('/api/orga/login', (req, res) => {
   res.json({ message: 'Organisator erfolgreich eingeloggt' });
 });
 
-// Orga Logout
 app.post('/api/orga/logout', (req, res) => {
   res.clearCookie('orgaUsername');
   res.clearCookie('orgaPassword');
   res.json({ message: 'Organisator erfolgreich ausgeloggt' });
 });
 
-// GET Orga-Chat: Liefert paginierte Nachrichten (limit, olderThan)
 app.get('/api/orga/chats', orgaAuth, (req, res) => {
   const orgaChatFile = path.join(chatsDir, 'orga_chat.json');
   if (!fs.existsSync(orgaChatFile)) {
@@ -602,24 +599,16 @@ app.get('/api/orga/chats', orgaAuth, (req, res) => {
     console.error('Fehler beim Lesen des Orga-Chats', e);
     return res.status(500).json({ message: 'Fehler beim Lesen des Orga-Chats' });
   }
-  // Sortiere Nachrichten aufsteigend (älteste zuerst)
   chatData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-  
-  // Standard-Limit = 20 Nachrichten
   const limit = parseInt(req.query.limit, 10) || 20;
-  
-  // Falls ein "olderThan"-Parameter gesetzt ist, filtere Nachrichten, die älter sind.
   if (req.query.olderThan) {
     const olderThanDate = new Date(req.query.olderThan);
     chatData = chatData.filter(msg => new Date(msg.timestamp) < olderThanDate);
   }
-  
-  // Gib nur die letzten "limit" Nachrichten aus.
   chatData = chatData.slice(-limit);
   res.json(chatData);
 });
 
-// POST Orga-Chat: Textnachricht senden
 app.post('/api/orga/chats', orgaAuth, (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -640,16 +629,14 @@ app.post('/api/orga/chats', orgaAuth, (req, res) => {
     message,
     timestamp: new Date().toISOString(),
     pinned: false,
-    bundesland: req.orga.bundesland  // <-- add this
+    bundesland: req.orga.bundesland
   };
   newMessage.rank = `Organisator (${req.orga.bundesland})`;
-
   chatData.push(newMessage);
   writeJSON(orgaChatFile, chatData);
   res.json({ message: 'Nachricht gesendet', newMessage });
 });
 
-// POST Orga-Chat: Bild hochladen und Nachricht senden
 app.post('/api/orga/chats/image', orgaAuth, (req, res) => {
   upload.single('image')(req, res, function(err) {
     if (err) {
@@ -681,7 +668,6 @@ app.post('/api/orga/chats/image', orgaAuth, (req, res) => {
   });
 });
 
-// Neue Endpunkte für das Anpinnen von Nachrichten im Orga-Chat
 app.post('/api/orga/chats/pin', orgaAuth, (req, res) => {
   const { messageId, pin } = req.body;
   if (typeof messageId === 'undefined' || typeof pin === 'undefined') {
@@ -707,7 +693,6 @@ app.post('/api/orga/chats/pin', orgaAuth, (req, res) => {
   res.json({ message: `Nachricht ${pin ? 'angepinnt' : 'abgelöst'}` });
 });
 
-// GET Orga-Chat: Angepinnte Nachrichten abrufen
 app.get('/api/orga/chats/pinned', orgaAuth, (req, res) => {
   const orgaChatFile = path.join(chatsDir, 'orga_chat.json');
   if (!fs.existsSync(orgaChatFile)) {
@@ -721,7 +706,6 @@ app.get('/api/orga/chats/pinned', orgaAuth, (req, res) => {
     return res.status(500).json({ message: 'Fehler beim Lesen des Orga-Chats' });
   }
   const pinned = chatData.filter(m => m.pinned);
-  // Sortiere angepinnte Nachrichten (älteste zuerst)
   pinned.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   res.json(pinned);
 });
@@ -729,14 +713,11 @@ app.get('/api/orga/chats/pinned', orgaAuth, (req, res) => {
 /* ---------------------------
    Neue Admin-Endpunkte für Orga-Konten
 ----------------------------*/
-
-// GET: Liste aller Orga-Konten
 app.get('/api/admin/orgas', adminAuth, (req, res) => {
   const orgas = readJSON(orgaFile);
   res.json(orgas);
 });
 
-// POST: Orga-Konto erstellen (Admin-Panel)
 app.post('/api/admin/orgas/create', adminAuth, (req, res) => {
   const { username, password, bundesland } = req.body;
   if (!username || !password || !bundesland) {
@@ -751,7 +732,6 @@ app.post('/api/admin/orgas/create', adminAuth, (req, res) => {
   res.json({ message: 'Orga-Konto erfolgreich erstellt' });
 });
 
-// PUT: Orga-Konto aktualisieren (z. B. Passwort oder Bundesland ändern)
 app.put('/api/admin/orgas/:username', adminAuth, (req, res) => {
   const targetUsername = req.params.username;
   const { password, bundesland } = req.body;
@@ -770,7 +750,6 @@ app.put('/api/admin/orgas/:username', adminAuth, (req, res) => {
   res.json({ message: 'Orga-Konto erfolgreich aktualisiert' });
 });
 
-// DELETE: Orga-Konto löschen
 app.delete('/api/admin/orgas/:username', adminAuth, (req, res) => {
   const targetUsername = req.params.username;
   let orgas = readJSON(orgaFile);
@@ -785,7 +764,6 @@ app.delete('/api/admin/orgas/:username', adminAuth, (req, res) => {
 /* ---------------------------
    Admin-Endpunkte (wie bisher)
 ----------------------------*/
-// Hilfsfunktion zum Löschen aller Nachrichten eines bestimmten Nutzers in jedem Chat
 function deleteUserMessages(username) {
   try {
     const chatFiles = fs.readdirSync(chatsDir).filter(file => file.endsWith('.json'));
@@ -973,18 +951,14 @@ app.post('/api/admin/update-media', adminAuth, mediaUpload.fields([
   { name: 'video', maxCount: 1 },
   ...Array.from({ length: 19 }, (_, i) => ({ name: `image${i + 1}`, maxCount: 1 }))
 ]), (req, res) => {
-  // Zielverzeichnisse
   const videoDir = path.join(__dirname, 'private', 'homepage', 'videos');
   const imagesDir = path.join(__dirname, 'private', 'homepage', 'images');
   if (!fs.existsSync(videoDir)) { fs.mkdirSync(videoDir, { recursive: true }); }
   if (!fs.existsSync(imagesDir)) { fs.mkdirSync(imagesDir, { recursive: true }); }
-  
-  // Mapping: Feldname -> Zieldateiname
   const fileMapping = { video: 'video1.mp4' };
   for (let i = 1; i <= 19; i++) {
     fileMapping[`image${i}`] = `bild${i}.png`;
   }
-  
   Object.entries(fileMapping).forEach(([field, targetFilename]) => {
     if (req.files && req.files[field]) {
       let targetDir;
@@ -1004,9 +978,8 @@ app.post('/api/admin/update-media', adminAuth, mediaUpload.fields([
   res.json({ message: 'Medien erfolgreich aktualisiert' });
 });
 
-// Endpoint für das Video
 app.get('/api/media/video/:filename', (req, res) => {
-  const filename = req.params.filename; // z.B. "video1.mp4"
+  const filename = req.params.filename;
   const videoPath = path.join(__dirname, 'private', 'homepage', 'videos', filename);
   if (fs.existsSync(videoPath)) {
     res.sendFile(videoPath);
@@ -1015,9 +988,8 @@ app.get('/api/media/video/:filename', (req, res) => {
   }
 });
 
-// Endpoint für Bilder
 app.get('/api/media/image/:filename', (req, res) => {
-  const filename = req.params.filename; // z.B. "bild1.png"
+  const filename = req.params.filename;
   const imagePath = path.join(__dirname, 'private', 'homepage', 'images', filename);
   if (fs.existsSync(imagePath)) {
     res.sendFile(imagePath);
@@ -1026,7 +998,6 @@ app.get('/api/media/image/:filename', (req, res) => {
   }
 });
 
-// Neuer Admin-Endpunkt: Chats sperren/entsperren
 app.post('/api/admin/chats-lock', adminAuth, (req, res) => {
   const { lock } = req.body;
   if (typeof lock !== 'boolean') {
@@ -1037,28 +1008,22 @@ app.post('/api/admin/chats-lock', adminAuth, (req, res) => {
 });
 
 // --------------------------------------
-// Newsletter-Route für die Anmeldung (stündliche Grenze: 30 Anmeldungen insgesamt)
+// Newsletter-Route (stündliche Grenze: 30 Anmeldungen insgesamt)
 // --------------------------------------
 app.post('/newsletter/subscribe', (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ message: 'Keine E-Mail-Adresse angegeben' });
   }
-  // Prüfe die stündliche Anmelde-Grenze (gesamt)
   if (newsletterCount >= NEWSLETTER_LIMIT) {
     return res.status(429).json({ message: 'Die stündliche Grenze an Newsletter-Anmeldungen wurde erreicht. Bitte versuchen Sie es später noch einmal.' });
   }
-  
-  // Optionale serverseitige E-Mail-Validierung
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(email)) {
     return res.status(400).json({ message: 'Ungültige E-Mail-Adresse' });
   }
-
   const emailFilePath = path.join(__dirname, 'private', 'email.json');
-
   let emails = [];
-  // Prüfen, ob die Datei existiert
   if (fs.existsSync(emailFilePath)) {
     try {
       emails = JSON.parse(fs.readFileSync(emailFilePath, 'utf8'));
@@ -1069,14 +1034,11 @@ app.post('/newsletter/subscribe', (req, res) => {
   if (!Array.isArray(emails)) {
     emails = [];
   }
-
-  // E-Mail nur speichern, wenn sie noch nicht vorhanden ist
   if (!emails.includes(email)) {
     emails.push(email);
     fs.writeFileSync(emailFilePath, JSON.stringify(emails, null, 2), 'utf8');
-    newsletterCount++; // Zähler erhöhen
+    newsletterCount++;
   }
-
   return res.json({ message: 'E-Mail erfolgreich hinzugefügt' });
 });
 
@@ -1086,7 +1048,6 @@ app.post('/newsletter/subscribe', (req, res) => {
 app.get('/api/admin/newsletter-emails', adminAuth, (req, res) => {
   const emailFilePath = path.join(__dirname, 'private', 'email.json');
   if (!fs.existsSync(emailFilePath)) {
-    // Falls noch keine Datei existiert, einfach leeres Array zurückgeben
     return res.json([]);
   }
   try {
