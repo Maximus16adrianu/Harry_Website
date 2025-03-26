@@ -10,19 +10,114 @@ const PORT = 3000;
 // Definiere den API Key als Konstante (8-stellige zufällige alphanumerische Zeichenkette)
 const API_KEY = "QjT6CoRwXS";
 
-// Globaler Sperrstatus: Standardmäßig entsperrt
+// Globaler Sperrstatus für Chats
 let chatsLocked = false;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// -----------------------------
+// Neue globale Variablen für Rate Limiting
+
+// Für Account-bezogene Endpunkte (Signup, Login, etc.)
+let accountGlobalTimestamps = []; // Array von Objekten { ip, time } aller Requests (letzte 60 Sekunden)
+let globalAccountLockUntil = 0;     // Sperrt den gesamten Account-Endpunkt, wenn >50 Requests in 60 Sekunden von nicht-gebannten IPs erfolgen
+let accountIPData = {};             // { ip: { requests: [], fiveMinRequests: [], blockUntil: <timestamp>, blockCount: <number> } }
+
+// Für Newsletter-Endpunkt (E-Mail absenden)
+let newsletterGlobalTimestamps = []; // Timestamps der letzten Minute
+let globalNewsletterLockUntil = 0;     // Sperrt den Newsletter-Endpunkt, wenn >5 Requests in 60 Sekunden erfolgen
+let newsletterIPData = {};             // { ip: { lastEmailSent: <timestamp> } }
+
+// Für API-Key (Admin) Authentifizierung: globale Zähler für fehlgeschlagene Versuche
+let globalApiKeyFailures = [];         // Timestamps fehlgeschlagener API-Key-Versuche (letzte 60 Sekunden)
+let globalApiKeyLockUntil = 0;         // Sperrt API-Key-Authentifizierung global für 10 Minuten
+// -----------------------------
+
+// Middleware für Account-bezogene Endpunkte (Signup, Login, etc.)
+function accountRateLimiter(req, res, next) {
+  const ip = req.ip;
+  const now = Date.now();
+
+  // Falls global bereits gesperrt und die Sperrzeit noch nicht abgelaufen ist
+  if (globalAccountLockUntil && now < globalAccountLockUntil) {
+    return res.status(429).json({ message: 'Account-Endpunkt ist vorübergehend wegen hoher Auslastung gesperrt.' });
+  }
+  // Falls die globale Sperre abgelaufen ist, zurücksetzen
+  if (globalAccountLockUntil && now >= globalAccountLockUntil) {
+    globalAccountLockUntil = 0;
+  }
+
+  // Prüfe, ob diese IP bereits gebannt ist – falls ja, IGNORIERE (zähle nicht) die Anfrage
+  if (accountIPData[ip] && now < accountIPData[ip].blockUntil) {
+    return res.status(429).json({ message: 'Ihre IP wurde vorübergehend blockiert.' });
+  }
+
+  // Füge nur Anfragen von nicht gesperrten IPs in den globalen Zähler ein
+  accountGlobalTimestamps.push({ ip, time: now });
+  accountGlobalTimestamps = accountGlobalTimestamps.filter(item =>
+    now - item.time < 60000 &&
+    !(accountIPData[item.ip] && now < accountIPData[item.ip].blockUntil)
+  );
+  if (accountGlobalTimestamps.length > 50) {
+    globalAccountLockUntil = now + 1 * 60 * 1000; // 1 Minuten Sperre
+    return res.status(429).json({ message: 'Account-Endpunkt ist vorübergehend wegen hoher Auslastung gesperrt.' });
+  }
+
+  // Pro-IP Rate Limiting
+  if (!accountIPData[ip]) {
+    accountIPData[ip] = { requests: [], fiveMinRequests: [], blockUntil: 0, blockCount: 0 };
+  }
+  accountIPData[ip].requests.push(now);
+  accountIPData[ip].requests = accountIPData[ip].requests.filter(ts => now - ts < 60000);
+  if (accountIPData[ip].requests.length > 5) {
+    return res.status(429).json({ message: 'Zu viele Anfragen von dieser IP. Maximal 5 pro Minute erlaubt.' });
+  }
+  accountIPData[ip].fiveMinRequests.push(now);
+  accountIPData[ip].fiveMinRequests = accountIPData[ip].fiveMinRequests.filter(ts => now - ts < 5 * 60 * 1000);
+  if (accountIPData[ip].fiveMinRequests.length > 20) {
+    if (accountIPData[ip].blockCount === 0) {
+      accountIPData[ip].blockUntil = now + 60 * 60 * 1000;
+      accountIPData[ip].blockCount = 1;
+    } else {
+      accountIPData[ip].blockUntil = now + 24 * 60 * 60 * 1000;
+    }
+    return res.status(429).json({ message: 'Ihre IP wurde wegen verdächtiger Aktivität blockiert.' });
+  }
+  next();
+}
+
+// Middleware für den Newsletter-Endpunkt (E-Mail absenden)
+function newsletterRateLimiter(req, res, next) {
+  const ip = req.ip;
+  const now = Date.now();
+
+  if (globalNewsletterLockUntil && now < globalNewsletterLockUntil) {
+    return res.status(429).json({ message: 'Newsletter-Endpunkt ist vorübergehend wegen hoher Auslastung gesperrt.' });
+  }
+  newsletterGlobalTimestamps.push(now);
+  newsletterGlobalTimestamps = newsletterGlobalTimestamps.filter(ts => now - ts < 60000);
+  if (newsletterGlobalTimestamps.length > 5) {
+    globalNewsletterLockUntil = now + 10 * 60 * 1000; // 10 Minuten Sperre
+    return res.status(429).json({ message: 'Newsletter-Endpunkt ist vorübergehend wegen hoher Auslastung gesperrt.' });
+  }
+  // Pro-IP: maximal 1 E-Mail pro Stunde
+  if (!newsletterIPData[ip]) {
+    newsletterIPData[ip] = { lastEmailSent: 0 };
+  }
+  if (now - newsletterIPData[ip].lastEmailSent < 60 * 60 * 1000) {
+    return res.status(429).json({ message: 'Sie können nur eine E-Mail pro Stunde absenden.' });
+  }
+  newsletterIPData[ip].lastEmailSent = now;
+  next();
+}
+
 // Verzeichnis-Pfade
 const privateDir = path.join(__dirname, 'private');
 const chatsDir = path.join(privateDir, 'bundes_chats');
-const picturesDir = path.join(privateDir, 'pictures'); // Für Bilder
+const picturesDir = path.join(privateDir, 'pictures');
 
-// Stelle sicher, dass die notwendigen Verzeichnisse existieren
 if (!fs.existsSync(picturesDir)) {
   fs.mkdirSync(picturesDir, { recursive: true });
 }
@@ -32,10 +127,9 @@ if (!fs.existsSync(chatsDir)) {
 
 const usersFile = path.join(privateDir, 'users.json');
 const adminsFile = path.join(privateDir, 'admins.json');
-const orgaFile = path.join(privateDir, 'orga.json'); // Für Organisatoren
+const orgaFile = path.join(privateDir, 'orga.json');
 const requestAccessFile = path.join(privateDir, 'request_acces.json');
 
-// Hilfsfunktionen zum synchronen Lesen/Schreiben von JSON
 function readJSON(filePath) {
   try {
     if (fs.existsSync(filePath)) {
@@ -57,78 +151,8 @@ function writeJSON(filePath, data) {
   }
 }
 
-// In-Memory-Store für Rate Limiting (nur für normale Nutzer in Chat-Nachrichten)
 const userMessageTimestamps = {};
 
-// === Globale Variablen für account-bezogenes Rate Limiting (pro IP) ===
-const bannedIPs = new Set();
-const accountRateLimit = {}; // { ip: count }
-const ACCOUNT_THRESHOLD = 500; // pro Minute
-
-// Neue Middleware für Account-Registrierung und Login (pro IP)
-function accountRateLimiter(req, res, next) {
-  const ip = req.ip || req.connection.remoteAddress;
-  if (bannedIPs.has(ip)) {
-    return res.status(403).json({ message: 'Ihre IP wurde dauerhaft wegen Spam blockiert.' });
-  }
-  if (req.path === '/api/signup' || req.path === '/api/login') {
-    accountRateLimit[ip] = (accountRateLimit[ip] || 0) + 1;
-    if (accountRateLimit[ip] > ACCOUNT_THRESHOLD) {
-      bannedIPs.add(ip);
-      return res.status(403).json({ message: 'Ihre IP wurde dauerhaft wegen übermäßigen Account-Spammings blockiert.' });
-    }
-  }
-  next();
-}
-
-app.use((req, res, next) => {
-  if (req.method === 'POST' && (req.path === '/api/signup' || req.path === '/api/login')) {
-    return accountRateLimiter(req, res, next);
-  }
-  next();
-});
-
-// Reset pro IP-Zähler jede Minute
-setInterval(() => {
-  for (const ip in accountRateLimit) {
-    accountRateLimit[ip] = 0;
-  }
-}, 60000);
-
-// === Globale Variablen für die stündliche Newsletter-Anmelde-Grenze ===
-let newsletterCount = 0;
-const NEWSLETTER_LIMIT = 30;
-setInterval(() => {
-  newsletterCount = 0;
-}, 3600000);
-
-// === Globale Variablen für das globale Account-Registrierungs-Limit ===
-let globalRegistrationCount = 0;
-const REGISTRATION_LIMIT = 50;
-let registrationLocked = false;
-setInterval(() => {
-  globalRegistrationCount = 0;
-}, 60000);
-function lockRegistrations() {
-  registrationLocked = true;
-  setTimeout(() => {
-    registrationLocked = false;
-  }, 5 * 60 * 1000);
-}
-
-// === Globale Variablen für Organisator-Login ===
-const orgaLoginAttempts = {};  // { ip: count }
-const ORGA_MAX_ATTEMPTS = 3;
-const ORGA_BAN_DURATION = 24 * 60 * 60 * 1000; // 24 Stunden in ms
-const orgaBannedIPs = {};       // { ip: banExpiryTimestamp }
-
-// === Neue globale Variablen für Admin-Key-Anmeldeversuche ===
-const adminKeyLoginAttempts = {}; // { ip: count }
-const ADMIN_KEY_MAX_ATTEMPTS = 2;
-const ADMIN_KEY_BAN_DURATION = 60 * 60 * 1000; // 1 Stunde in ms
-const adminKeyBannedIPs = {};       // { ip: banExpiryTimestamp }
-
-// Multer-Konfiguration für Bilder-Upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, picturesDir);
@@ -151,7 +175,7 @@ const upload = multer({
 });
 
 /* ---------------------------
-   Middleware: Authentifizierung (Cookies) für normale Nutzer, Admins und Organisatoren
+   Middleware: Authentifizierung (Cookies)
 ----------------------------*/
 function authMiddleware(req, res, next) {
   const { username, password } = req.cookies;
@@ -192,11 +216,7 @@ function authMiddleware(req, res, next) {
    Middleware: Admin-Authentifizierung (API Key oder Cookies)
 ----------------------------*/
 function adminAuth(req, res, next) {
-  const ip = req.ip || req.connection.remoteAddress;
-  // Prüfe, ob diese IP wegen falscher Admin-Key-Versuche gesperrt ist
-  if (adminKeyBannedIPs[ip] && Date.now() < adminKeyBannedIPs[ip]) {
-    return res.status(403).json({ message: 'Ihre IP wurde aufgrund zu vieler falscher Admin-Anmeldeversuche für 1 Stunde gesperrt.' });
-  }
+  const now = Date.now();
   const { username, password } = req.cookies;
   if (username && password) {
     let users = readJSON(usersFile);
@@ -213,21 +233,26 @@ function adminAuth(req, res, next) {
       return next();
     }
   }
+  // API-Key Authentifizierung
   const apiKey = (req.body.apiKey || req.query.apiKey || "").trim();
-  // Wenn kein API Key oder falscher API Key
-  if (apiKey !== API_KEY) {
-    adminKeyLoginAttempts[ip] = (adminKeyLoginAttempts[ip] || 0) + 1;
-    if (adminKeyLoginAttempts[ip] > ADMIN_KEY_MAX_ATTEMPTS) {
-      adminKeyBannedIPs[ip] = Date.now() + ADMIN_KEY_BAN_DURATION;
-      adminKeyLoginAttempts[ip] = 0;
-      return res.status(403).json({ message: 'Ihre IP wurde aufgrund zu vieler falscher Admin-Anmeldeversuche für 1 Stunde gesperrt.' });
-    }
-    return res.status(403).json({ message: 'Ungültiger API Key oder nicht angemeldet' });
+  if (globalApiKeyLockUntil && now < globalApiKeyLockUntil) {
+    return res.status(429).json({ message: 'API Key Authentifizierung ist vorübergehend gesperrt.' });
   }
-  // Bei korrektem API Key wird der Zähler zurückgesetzt
-  adminKeyLoginAttempts[ip] = 0;
-  req.user = { username: "admin", isAdmin: true };
-  return next();
+  if (apiKey === API_KEY) {
+    globalApiKeyFailures = [];
+    req.user = { username: "admin", isAdmin: true };
+    return next();
+  } else {
+    if (apiKey) {
+      globalApiKeyFailures.push(now);
+      globalApiKeyFailures = globalApiKeyFailures.filter(ts => now - ts < 60000);
+      if (globalApiKeyFailures.length >= 2) {
+        globalApiKeyLockUntil = now + 10 * 60 * 1000;
+        return res.status(429).json({ message: 'API Key Authentifizierung ist vorübergehend gesperrt.' });
+      }
+    }
+  }
+  return res.status(403).json({ message: 'Ungültiger API Key oder nicht angemeldet' });
 }
 
 /* ---------------------------
@@ -265,8 +290,7 @@ app.get('/api/userinfo', authMiddleware, (req, res) => {
   res.json(info);
 });
 
-// Aktualisierter Login: Suche nun auch in orga.json
-app.post('/api/login', (req, res) => {
+app.post('/api/login', accountRateLimiter, (req, res) => {
   const { username, password } = req.body;
   let user = null;
   let source = null;
@@ -310,6 +334,18 @@ app.post('/api/login', (req, res) => {
   }
 });
 
+app.post('/api/orga/login', accountRateLimiter, (req, res) => {
+  const { username, password } = req.body;
+  let orgas = readJSON(orgaFile);
+  const orga = orgas.find(o => o.username === username && o.password === password);
+  if (!orga) {
+    return res.status(401).json({ message: 'Ungültige Zugangsdaten' });
+  }
+  res.cookie('orgaUsername', username, { httpOnly: true });
+  res.cookie('orgaPassword', password, { httpOnly: true });
+  res.json({ message: 'Organisator erfolgreich eingeloggt' });
+});
+
 app.post('/api/logout', (req, res) => {
   res.clearCookie('username');
   res.clearCookie('password');
@@ -318,24 +354,8 @@ app.post('/api/logout', (req, res) => {
   res.json({ message: 'Erfolgreich ausgeloggt' });
 });
 
-app.post('/api/signup', (req, res) => {
+app.post('/api/signup', accountRateLimiter, (req, res) => {
   const { username, password } = req.body;
-  
-  // Username-Längenbegrenzung: maximal 15 Zeichen
-  if (username.length > 15) {
-    return res.status(400).json({ message: 'Username darf maximal 15 Zeichen lang sein.' });
-  }
-  
-  // Globales Rate-Limit für Account-Registrierungen (über alle IPs)
-  if (registrationLocked) {
-    return res.status(429).json({ message: 'Zu viele Registrierungen. Bitte versuchen Sie es in 5 Minuten erneut.' });
-  }
-  if (globalRegistrationCount >= REGISTRATION_LIMIT) {
-    lockRegistrations();
-    return res.status(429).json({ message: 'Zu viele Registrierungen. Bitte versuchen Sie es in 5 Minuten erneut.' });
-  }
-  globalRegistrationCount++;
-
   if (!username || !password) {
     return res.status(400).json({ message: 'Username und Passwort erforderlich' });
   }
@@ -359,7 +379,7 @@ app.post('/api/signup', (req, res) => {
 });
 
 /* ---------------------------
-   Chat-Endpunkte (für normale Nutzer, Admins und Organisatoren)
+   Chat-Endpunkte (für Nutzer, Admins, Orgas)
 ----------------------------*/
 app.get('/api/channels', authMiddleware, (req, res) => {
   fs.readdir(chatsDir, (err, files) => {
@@ -592,25 +612,13 @@ app.post('/api/orga/create', (req, res) => {
   res.json({ message: 'Organisator-Konto erstellt' });
 });
 
-// Organisator-Login mit 3 falschen Versuchen pro IP und 24h-Ban
-app.post('/api/orga/login', (req, res) => {
-  const ip = req.ip || req.connection.remoteAddress;
-  if (orgaBannedIPs[ip] && Date.now() < orgaBannedIPs[ip]) {
-    return res.status(403).json({ message: 'Ihre IP wurde wegen zu vieler falscher Organisator-Anmeldeversuche für 24 Stunden gesperrt.' });
-  }
+app.post('/api/orga/login', accountRateLimiter, (req, res) => {
   const { username, password } = req.body;
   let orgas = readJSON(orgaFile);
   const orga = orgas.find(o => o.username === username && o.password === password);
   if (!orga) {
-    orgaLoginAttempts[ip] = (orgaLoginAttempts[ip] || 0) + 1;
-    if (orgaLoginAttempts[ip] >= ORGA_MAX_ATTEMPTS) {
-      orgaBannedIPs[ip] = Date.now() + ORGA_BAN_DURATION;
-      orgaLoginAttempts[ip] = 0;
-      return res.status(403).json({ message: 'Zu viele falsche Anmeldeversuche. Ihre IP wurde für 24 Stunden gesperrt.' });
-    }
     return res.status(401).json({ message: 'Ungültige Zugangsdaten' });
   }
-  orgaLoginAttempts[ip] = 0;
   res.cookie('orgaUsername', username, { httpOnly: true });
   res.cookie('orgaPassword', password, { httpOnly: true });
   res.json({ message: 'Organisator erfolgreich eingeloggt' });
@@ -990,10 +998,12 @@ app.post('/api/admin/update-media', adminAuth, mediaUpload.fields([
   const imagesDir = path.join(__dirname, 'private', 'homepage', 'images');
   if (!fs.existsSync(videoDir)) { fs.mkdirSync(videoDir, { recursive: true }); }
   if (!fs.existsSync(imagesDir)) { fs.mkdirSync(imagesDir, { recursive: true }); }
+  
   const fileMapping = { video: 'video1.mp4' };
   for (let i = 1; i <= 19; i++) {
     fileMapping[`image${i}`] = `bild${i}.png`;
   }
+  
   Object.entries(fileMapping).forEach(([field, targetFilename]) => {
     if (req.files && req.files[field]) {
       let targetDir;
@@ -1043,21 +1053,19 @@ app.post('/api/admin/chats-lock', adminAuth, (req, res) => {
 });
 
 // --------------------------------------
-// Newsletter-Route (stündliche Grenze: 30 Anmeldungen insgesamt)
-// --------------------------------------
-app.post('/newsletter/subscribe', (req, res) => {
+// Newsletter-Route (mit newsletterRateLimiter)
+app.post('/newsletter/subscribe', newsletterRateLimiter, (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ message: 'Keine E-Mail-Adresse angegeben' });
-  }
-  if (newsletterCount >= NEWSLETTER_LIMIT) {
-    return res.status(429).json({ message: 'Die stündliche Grenze an Newsletter-Anmeldungen wurde erreicht. Bitte versuchen Sie es später noch einmal.' });
   }
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(email)) {
     return res.status(400).json({ message: 'Ungültige E-Mail-Adresse' });
   }
+
   const emailFilePath = path.join(__dirname, 'private', 'email.json');
+
   let emails = [];
   if (fs.existsSync(emailFilePath)) {
     try {
@@ -1072,14 +1080,12 @@ app.post('/newsletter/subscribe', (req, res) => {
   if (!emails.includes(email)) {
     emails.push(email);
     fs.writeFileSync(emailFilePath, JSON.stringify(emails, null, 2), 'utf8');
-    newsletterCount++;
   }
   return res.json({ message: 'E-Mail erfolgreich hinzugefügt' });
 });
 
 // --------------------------------------
 // Admin-Route, um alle Newsletter-E-Mails abzufragen
-// --------------------------------------
 app.get('/api/admin/newsletter-emails', adminAuth, (req, res) => {
   const emailFilePath = path.join(__dirname, 'private', 'email.json');
   if (!fs.existsSync(emailFilePath)) {
