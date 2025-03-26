@@ -57,8 +57,61 @@ function writeJSON(filePath, data) {
   }
 }
 
-// In-Memory-Store für Rate Limiting (nur für normale Nutzer)
+// In-Memory-Store für Rate Limiting (nur für normale Nutzer in Chat-Nachrichten)
 const userMessageTimestamps = {};
+
+// === Neue globale Variablen für Account-bezogenes Rate Limiting ===
+const bannedIPs = new Set();
+const accountRateLimit = {}; // { ip: count }
+const ACCOUNT_THRESHOLD = 500; // Schwellenwert pro Minute
+
+// Neue Middleware für Account-Registrierung und Login
+function accountRateLimiter(req, res, next) {
+  // Hole die IP-Adresse aus der Anfrage
+  const ip = req.ip || req.connection.remoteAddress;
+
+  // Prüfe, ob die IP bereits gebannt ist
+  if (bannedIPs.has(ip)) {
+    return res.status(403).json({ message: 'Ihre IP wurde dauerhaft wegen Spam blockiert.' });
+  }
+  
+  // Rate Limiting nur für /api/signup und /api/login
+  if (req.path === '/api/signup' || req.path === '/api/login') {
+    accountRateLimit[ip] = (accountRateLimit[ip] || 0) + 1;
+    
+    // Falls die Schwelle überschritten wird, bannen
+    if (accountRateLimit[ip] > ACCOUNT_THRESHOLD) {
+      bannedIPs.add(ip);
+      return res.status(403).json({ message: 'Ihre IP wurde dauerhaft wegen übermäßigen Account-Spammings blockiert.' });
+    }
+  }
+  
+  next();
+}
+
+// Setze die Account-RateLimiter-Middleware nur für POST-Anfragen an /api/signup und /api/login ein
+app.use((req, res, next) => {
+  if (req.method === 'POST' && (req.path === '/api/signup' || req.path === '/api/login')) {
+    return accountRateLimiter(req, res, next);
+  }
+  next();
+});
+
+// Setze den Zähler jede Minute zurück
+setInterval(() => {
+  for (const ip in accountRateLimit) {
+    accountRateLimit[ip] = 0;
+  }
+}, 60000);
+
+// === Neue globale Variablen für die stündliche Newsletter-Anmelde-Grenze ===
+let newsletterCount = 0;
+const NEWSLETTER_LIMIT = 30;
+
+// Setze den Newsletter-Zähler jede Stunde zurück
+setInterval(() => {
+  newsletterCount = 0;
+}, 3600000);
 
 // Multer-Konfiguration für Bilder-Upload
 const storage = multer.diskStorage({
@@ -346,7 +399,6 @@ function removeDisallowedMessages(filePath, chatData) {
   return cleanedData;
 }
 
-
 app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
   if (chatName === 'Admin_chat' && !req.user.isAdmin) {
@@ -413,7 +465,6 @@ app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
   writeJSON(filePath, chatData);
   res.json({ message: 'Nachricht gesendet', newMessage });
 });
-
 
 app.post('/api/chats/:chatName/image', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
@@ -583,15 +634,15 @@ app.post('/api/orga/chats', orgaAuth, (req, res) => {
       console.error('Fehler beim Parsen des Orga-Chats', e);
     }
   }
-const newMessage = {
-  id: Date.now() + '_' + Math.floor(Math.random() * 1000),
-  user: req.orga.username,
-  message,
-  timestamp: new Date().toISOString(),
-  pinned: false,
-  bundesland: req.orga.bundesland  // <-- add this
-};
-newMessage.rank = `Organisator (${req.orga.bundesland})`;
+  const newMessage = {
+    id: Date.now() + '_' + Math.floor(Math.random() * 1000),
+    user: req.orga.username,
+    message,
+    timestamp: new Date().toISOString(),
+    pinned: false,
+    bundesland: req.orga.bundesland  // <-- add this
+  };
+  newMessage.rank = `Organisator (${req.orga.bundesland})`;
 
   chatData.push(newMessage);
   writeJSON(orgaChatFile, chatData);
@@ -986,13 +1037,18 @@ app.post('/api/admin/chats-lock', adminAuth, (req, res) => {
 });
 
 // --------------------------------------
-// Newsletter-Route für die Anmeldung
+// Newsletter-Route für die Anmeldung (stündliche Grenze: 30 Anmeldungen insgesamt)
 // --------------------------------------
 app.post('/newsletter/subscribe', (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ message: 'Keine E-Mail-Adresse angegeben' });
   }
+  // Prüfe die stündliche Anmelde-Grenze (gesamt)
+  if (newsletterCount >= NEWSLETTER_LIMIT) {
+    return res.status(429).json({ message: 'Die stündliche Grenze an Newsletter-Anmeldungen wurde erreicht. Bitte versuchen Sie es später noch einmal.' });
+  }
+  
   // Optionale serverseitige E-Mail-Validierung
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(email)) {
@@ -1018,6 +1074,7 @@ app.post('/newsletter/subscribe', (req, res) => {
   if (!emails.includes(email)) {
     emails.push(email);
     fs.writeFileSync(emailFilePath, JSON.stringify(emails, null, 2), 'utf8');
+    newsletterCount++; // Zähler erhöhen
   }
 
   return res.json({ message: 'E-Mail erfolgreich hinzugefügt' });

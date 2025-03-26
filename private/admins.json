@@ -1,22 +1,26 @@
 [
-    {
-      "username": "Klimamann",
-      "password": "biene1967",
-      "bundesland": "Berlin"
-    },
-    {
-      "username": "Sasa1987",
-      "password": "1488wallhalla",
-      "bundesland": "Schleswig-Holstein"
-    },
-    {
-      "username": "Fritz",
-      "password": "310899Ff",
-      "bundesland": "Bayern"
-    },
-    {
-      "username": "Speedy",
-      "password": "12345678",
-      "bundesland": "Schleswig-Holstein"
-    }
-  ]
+  {
+    "username": "Klimamann",
+    "password": "biene1967",
+    "bundesland": "Berlin",
+    "isAdmin": true
+  },
+  {
+    "username": "Sasa1987",
+    "password": "1488wallhalla",
+    "bundesland": "Schleswig-Holstein",
+    "isAdmin": true
+  },
+  {
+    "username": "Fritz",
+    "password": "310899Ff",
+    "bundesland": "Bayern",
+    "isAdmin": true
+  },
+  {
+    "username": "Speedy",
+    "password": "12345678",
+    "bundesland": "Schleswig-Holstein",
+    "isAdmin": true
+  }
+]
