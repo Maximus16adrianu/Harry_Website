@@ -102,22 +102,31 @@ setInterval(() => {
   newsletterCount = 0;
 }, 3600000);
 
-// === Neue globale Variablen für das globale Account-Registrierungs-Limit ===
+// === Globale Variablen für das globale Account-Registrierungs-Limit ===
 let globalRegistrationCount = 0;
 const REGISTRATION_LIMIT = 50;
 let registrationLocked = false;
-// Reset globaler Registrierungszähler jede Minute
 setInterval(() => {
   globalRegistrationCount = 0;
 }, 60000);
-
-// Funktion zum Sperren der Registrierung für 5 Minuten
 function lockRegistrations() {
   registrationLocked = true;
   setTimeout(() => {
     registrationLocked = false;
   }, 5 * 60 * 1000);
 }
+
+// === Globale Variablen für Organisator-Login ===
+const orgaLoginAttempts = {};  // { ip: count }
+const ORGA_MAX_ATTEMPTS = 3;
+const ORGA_BAN_DURATION = 24 * 60 * 60 * 1000; // 24 Stunden in ms
+const orgaBannedIPs = {};       // { ip: banExpiryTimestamp }
+
+// === Neue globale Variablen für Admin-Key-Anmeldeversuche ===
+const adminKeyLoginAttempts = {}; // { ip: count }
+const ADMIN_KEY_MAX_ATTEMPTS = 2;
+const ADMIN_KEY_BAN_DURATION = 60 * 60 * 1000; // 1 Stunde in ms
+const adminKeyBannedIPs = {};       // { ip: banExpiryTimestamp }
 
 // Multer-Konfiguration für Bilder-Upload
 const storage = multer.diskStorage({
@@ -183,6 +192,11 @@ function authMiddleware(req, res, next) {
    Middleware: Admin-Authentifizierung (API Key oder Cookies)
 ----------------------------*/
 function adminAuth(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress;
+  // Prüfe, ob diese IP wegen falscher Admin-Key-Versuche gesperrt ist
+  if (adminKeyBannedIPs[ip] && Date.now() < adminKeyBannedIPs[ip]) {
+    return res.status(403).json({ message: 'Ihre IP wurde aufgrund zu vieler falscher Admin-Anmeldeversuche für 1 Stunde gesperrt.' });
+  }
   const { username, password } = req.cookies;
   if (username && password) {
     let users = readJSON(usersFile);
@@ -200,11 +214,20 @@ function adminAuth(req, res, next) {
     }
   }
   const apiKey = (req.body.apiKey || req.query.apiKey || "").trim();
-  if (apiKey === API_KEY) {
-    req.user = { username: "admin", isAdmin: true };
-    return next();
+  // Wenn kein API Key oder falscher API Key
+  if (apiKey !== API_KEY) {
+    adminKeyLoginAttempts[ip] = (adminKeyLoginAttempts[ip] || 0) + 1;
+    if (adminKeyLoginAttempts[ip] > ADMIN_KEY_MAX_ATTEMPTS) {
+      adminKeyBannedIPs[ip] = Date.now() + ADMIN_KEY_BAN_DURATION;
+      adminKeyLoginAttempts[ip] = 0;
+      return res.status(403).json({ message: 'Ihre IP wurde aufgrund zu vieler falscher Admin-Anmeldeversuche für 1 Stunde gesperrt.' });
+    }
+    return res.status(403).json({ message: 'Ungültiger API Key oder nicht angemeldet' });
   }
-  return res.status(403).json({ message: 'Ungültiger API Key oder nicht angemeldet' });
+  // Bei korrektem API Key wird der Zähler zurückgesetzt
+  adminKeyLoginAttempts[ip] = 0;
+  req.user = { username: "admin", isAdmin: true };
+  return next();
 }
 
 /* ---------------------------
@@ -569,13 +592,25 @@ app.post('/api/orga/create', (req, res) => {
   res.json({ message: 'Organisator-Konto erstellt' });
 });
 
+// Organisator-Login mit 3 falschen Versuchen pro IP und 24h-Ban
 app.post('/api/orga/login', (req, res) => {
+  const ip = req.ip || req.connection.remoteAddress;
+  if (orgaBannedIPs[ip] && Date.now() < orgaBannedIPs[ip]) {
+    return res.status(403).json({ message: 'Ihre IP wurde wegen zu vieler falscher Organisator-Anmeldeversuche für 24 Stunden gesperrt.' });
+  }
   const { username, password } = req.body;
   let orgas = readJSON(orgaFile);
   const orga = orgas.find(o => o.username === username && o.password === password);
   if (!orga) {
+    orgaLoginAttempts[ip] = (orgaLoginAttempts[ip] || 0) + 1;
+    if (orgaLoginAttempts[ip] >= ORGA_MAX_ATTEMPTS) {
+      orgaBannedIPs[ip] = Date.now() + ORGA_BAN_DURATION;
+      orgaLoginAttempts[ip] = 0;
+      return res.status(403).json({ message: 'Zu viele falsche Anmeldeversuche. Ihre IP wurde für 24 Stunden gesperrt.' });
+    }
     return res.status(401).json({ message: 'Ungültige Zugangsdaten' });
   }
+  orgaLoginAttempts[ip] = 0;
   res.cookie('orgaUsername', username, { httpOnly: true });
   res.cookie('orgaPassword', password, { httpOnly: true });
   res.json({ message: 'Organisator erfolgreich eingeloggt' });
