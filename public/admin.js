@@ -393,7 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   
-
   window.unbanUser = async (username) => {
     try {
       const res = await fetch('/api/admin/unban?apiKey=' + encodeURIComponent(currentApiKey), {
@@ -485,6 +484,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (e.target === document.getElementById('reportsModal')) {
       document.getElementById('reportsModal').style.display = 'none';
+    }
+    if (e.target === document.getElementById('impressumEditModal')) {
+      document.getElementById('impressumEditModal').style.display = 'none';
     }
   });
 
@@ -648,4 +650,65 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+
+  // -------------------------------
+  // NEU: Impressum bearbeiten
+  // -------------------------------
+  const editImpressumBtn = document.getElementById('editImpressumBtn');
+  const impressumEditModal = document.getElementById('impressumEditModal');
+  const closeImpressumEditModal = document.getElementById('closeImpressumEditModal');
+  const impressumEditForm = document.getElementById('impressumEditForm');
+
+  editImpressumBtn.addEventListener('click', async () => {
+    // Optional: aktuelles Impressum laden
+    try {
+      const res = await fetch('/api/impressum');
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('impVorname').value = data.Vorname || '';
+        document.getElementById('impNachname').value = data.Nachname || '';
+        document.getElementById('impAdresse').value = data.Adresse || '';
+        document.getElementById('impAdresszusatz').value = data.Adresszusatz || '';
+        document.getElementById('impStadt').value = data.Stadt || '';
+        document.getElementById('impEmail').value = data.Email || '';
+      }
+    } catch(err) {
+      console.error("Fehler beim Laden des Impressums", err);
+    }
+    impressumEditModal.style.display = 'flex';
+  });
+
+  closeImpressumEditModal.addEventListener('click', () => {
+    impressumEditModal.style.display = 'none';
+  });
+
+  impressumEditForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = {
+      Vorname: document.getElementById('impVorname').value,
+      Nachname: document.getElementById('impNachname').value,
+      Adresse: document.getElementById('impAdresse').value,
+      Adresszusatz: document.getElementById('impAdresszusatz').value,
+      Stadt: document.getElementById('impStadt').value,
+      Email: document.getElementById('impEmail').value,
+      apiKey: currentApiKey
+    };
+    try {
+      const res = await fetch('/api/impressum?apiKey=' + encodeURIComponent(currentApiKey), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const result = await res.json();
+      if (res.ok) {
+        alert(result.message);
+        impressumEditModal.style.display = 'none';
+      } else {
+        alert(result.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Fehler beim Speichern des Impressums.');
+    }
+  });
 });

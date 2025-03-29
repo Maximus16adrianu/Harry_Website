@@ -90,6 +90,8 @@
 
   <footer id="footer">
     <p>© 2025 DEMO DEUTSCHLAND. Alle Rechte vorbehalten.</p>
+    <!-- Neuer Button für Impressum -->
+    <button class="impressum-btn" onclick="openImpressumModal()">Impressum</button>
   </footer>
 
   <!-- Modal für "Melde Fehler" -->
@@ -115,6 +117,23 @@
 
         <button type="submit">Fehler absenden</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal für Impressum -->
+  <div id="impressumModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeImpressumModal()">&times;</span>
+      <h2>Impressum</h2>
+      <div id="impressumContent">
+        <!-- Hier werden die Impressumsdaten angezeigt -->
+        <p><strong>Vorname:</strong> Max</p>
+        <p><strong>Nachname:</strong> Mustermann</p>
+        <p><strong>Adresse:</strong> Musterstraße 1</p>
+        <p><strong>Adresszusatz:</strong> EG, links</p>
+        <p><strong>Stadt:</strong> Musterstadt</p>
+        <p><strong>Email:</strong> max@mustermann.de</p>
+      </div>
     </div>
   </div>
 

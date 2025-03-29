@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /* Fehler melden Modal und dynamisches Formular */
 
-// Öffnet das Modal
+// Öffnet das Fehler-Meldemodal
 function openReportModal() {
   const modal = document.getElementById("reportModal");
   if (modal) {
@@ -110,7 +110,7 @@ function openReportModal() {
   }
 }
 
-// Schließt das Modal
+// Schließt das Fehler-Meldemodal
 function closeReportModal() {
   const modal = document.getElementById("reportModal");
   if (modal) {
@@ -121,7 +121,41 @@ function closeReportModal() {
   document.getElementById("dynamicQuestions").innerHTML = "";
 }
 
-// Dynamisches Einblenden der weiteren Fragen basierend auf der Bereichsauswahl
+/* Impressum Modal Funktionen */
+
+// Öffnet das Impressum-Modal
+function openImpressumModal() {
+  const modal = document.getElementById("impressumModal");
+  if (modal) {
+    modal.style.display = "block";
+  }
+  // Optional: Hier kann man per Fetch den aktuellen Impressum-Inhalt laden.
+  // Beispiel:
+   fetch('/api/impressum')
+     .then(response => response.json())
+     .then(data => {
+       document.getElementById('impressumContent').innerHTML = `
+         <p><strong></strong> ${data.Vorname}</p>
+         <p><strong></strong> ${data.Nachname}</p>
+         <p><strong></strong> ${data.Adresse}</p>
+         <p><strong></strong> ${data.Adresszusatz}</p>
+         <p><strong></strong> ${data.Stadt}</p>
+         <p><strong></strong> ${data.Email}</p>
+       `;
+     })
+   .catch(error => console.error("Fehler beim Laden des Impressums:", error));
+}
+
+// Schließt das Impressum-Modal
+function closeImpressumModal() {
+  const modal = document.getElementById("impressumModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+/* Dynamisches Formular für Fehler melden */
+
 function handleAreaChange() {
   const area = document.getElementById("errorArea").value;
   const container = document.getElementById("dynamicQuestions");
@@ -197,7 +231,6 @@ function handleAreaChange() {
       <div id="newsletterAdditional"></div>
     `;
   }
-  // Kein Fallback-Textfeld mehr einfügen!
 }
 
 // Dynamik für Login-Zweig

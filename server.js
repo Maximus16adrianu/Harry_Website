@@ -845,7 +845,6 @@ function getSender(req) {
   return null;
 }
 
-
 /* ---------------------------
    Hilfsfunktion: Löscht Nachrichten eines Nutzers in allen Chat-Dateien.
 ----------------------------*/
@@ -1191,7 +1190,45 @@ app.get('/api/admin/newsletter-emails', adminAuth, (req, res) => {
   }
 });
 
-// --------------------------------------
+/* ---------------------------
+   Neuer Impressum-Endpunkt
+----------------------------*/
+const impressumFile = path.join(privateDir, 'impressum.json');
+
+app.get('/api/impressum', (req, res) => {
+  if (fs.existsSync(impressumFile)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(impressumFile, 'utf8'));
+      return res.json(data);
+    } catch (err) {
+      console.error("Fehler beim Lesen der Impressum-Datei", err);
+      return res.status(500).json({ message: 'Fehler beim Lesen der Impressum-Datei' });
+    }
+  } else {
+    return res.status(404).json({ message: 'Impressum nicht gefunden' });
+  }
+});
+
+app.post('/api/impressum', (req, res) => {
+  const apiKey = (req.body.apiKey || req.query.apiKey || "").trim();
+  if (apiKey !== API_KEY) {
+    return res.status(403).json({ message: 'Ungültiger API Key' });
+  }
+  const { Vorname, Nachname, Adresse, Adresszusatz, Stadt, Email } = req.body;
+  if (!Vorname || !Nachname || !Adresse || !Adresszusatz || !Stadt || !Email) {
+    return res.status(400).json({ message: 'Alle Felder (Vorname, Nachname, Adresse, Adresszusatz, Stadt, Email) sind erforderlich' });
+  }
+  const impressumData = { Vorname, Nachname, Adresse, Adresszusatz, Stadt, Email };
+  try {
+    fs.writeFileSync(impressumFile, JSON.stringify(impressumData, null, 2), 'utf8');
+    return res.json({ message: 'Impressum erfolgreich aktualisiert', data: impressumData });
+  } catch (err) {
+    console.error("Fehler beim Schreiben der Impressum-Datei", err);
+    return res.status(500).json({ message: 'Fehler beim Aktualisieren der Impressum-Datei' });
+  }
+});
+
+// ---------------------------
 // Neuer Bugreport-Endpunkt mit validierter, strukturierter Eingabe
 app.post('/bugreport', (req, res) => {
   const ip = req.ip;

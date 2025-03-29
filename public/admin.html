@@ -85,6 +85,11 @@
       <section id="exportAllSection">
         <button id="exportAllBtn">Alle exportieren</button>
       </section>
+      
+      <!-- Neuer Bereich: Impressum bearbeiten -->
+      <section id="impressumAdminSection">
+        <button id="editImpressumBtn">Impressum bearbeiten</button>
+      </section>
     </section>
     
     <!-- Modal Fenster für Medien-Update -->
@@ -297,6 +302,29 @@
         <div id="reportsListContainer" class="reports-list-container">
           <div id="reportsList"></div>
         </div>
+      </div>
+    </div>
+    
+    <!-- Neuer Modal: Impressum-Bearbeitung -->
+    <div id="impressumEditModal" class="hidden modal">
+      <div class="modal-content">
+        <button id="closeImpressumEditModal" class="modal-close-button">&times;</button>
+        <h2>Impressum bearbeiten</h2>
+        <form id="impressumEditForm">
+          <label for="impVorname">Vorname:</label>
+          <input type="text" id="impVorname" name="Vorname" required>
+          <label for="impNachname">Nachname:</label>
+          <input type="text" id="impNachname" name="Nachname" required>
+          <label for="impAdresse">Adresse:</label>
+          <input type="text" id="impAdresse" name="Adresse" required>
+          <label for="impAdresszusatz">Adresszusatz:</label>
+          <input type="text" id="impAdresszusatz" name="Adresszusatz" required>
+          <label for="impStadt">Stadt:</label>
+          <input type="text" id="impStadt" name="Stadt" required>
+          <label for="impEmail">Email:</label>
+          <input type="email" id="impEmail" name="Email" required>
+          <button type="submit">Impressum speichern</button>
+        </form>
       </div>
     </div>
     

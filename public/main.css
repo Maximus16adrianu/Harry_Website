@@ -257,6 +257,24 @@ footer {
   margin-top: 40px;
   border-top: 4px solid #e30613;
   margin-left: 240px;
+  position: relative;
+}
+footer p {
+  margin: 0;
+}
+/* Button im Footer für Impressum */
+.impressum-btn {
+  margin-top: 10px;
+  background: #e30613;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.impressum-btn:hover {
+  background: #c10010;
 }
 
 /* Modal Styles */

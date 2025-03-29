@@ -256,6 +256,15 @@ button.secondary {
   margin-top: 24px;
 }
 
+/* Impressum-Bearbeitung Button im Admin-Bereich */
+#impressumAdminSection {
+  text-align: center;
+  margin-top: 24px;
+}
+#impressumAdminSection button {
+  background-color: #00897b;
+}
+
 /* Additional styling for Accept All button in the request section */
 #acceptAllBtn {
   margin-left: 8px;
