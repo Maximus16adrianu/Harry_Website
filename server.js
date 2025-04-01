@@ -891,6 +891,7 @@ app.post('/api/extra-chats/:bundesland', orgaAuth, (req, res) => {
 
   // Generiere einen eindeutigen Dateinamen für die Chat-Nachrichten
   const file = `extrachat_${bundesland}_${Date.now()}_${Math.floor(Math.random() * 1000)}.json`;
+  
 
   // Erstelle leere Datei für Chat-Nachrichten
   fs.writeFileSync(path.join(chatsDir, file), JSON.stringify([]), 'utf8');
