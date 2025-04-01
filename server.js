@@ -11,7 +11,7 @@ const PORT = 3000;
 // Definiere den API Key als Konstante (8-stellige zufällige alphanumerische Zeichenkette)
 const API_KEY = "QjT6CoRwXS";
 
-let chatsLocked = false;
+let chatsLocked = true;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

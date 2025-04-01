@@ -40,7 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     "Sachsen",
     "Sachsen-Anhalt",
     "Schleswig-Holstein",
-    "Thüringen"
+    "Thüringen",
+    "admin_chat"
   ];
 
   // --------------------------
