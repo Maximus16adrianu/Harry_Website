@@ -873,31 +873,32 @@ app.delete('/api/extra-chats/:chatFile', orgaAuth, (req, res) => {
   return res.json({ message: `Extra-Chat '${removedChat.name}' wurde gelöscht` });
 });
 
-
-
-// POST: Erstelle einen neuen Extra-Chat (max. 5 pro Bundesland, nur für Orgas)
+// POST: Erstelle einen neuen Extra-Chat (max. 5 pro Bundesland, für alle Orgas)
 app.post('/api/extra-chats/:bundesland', orgaAuth, (req, res) => {
   const bundesland = req.params.bundesland;
-  // Nur Orgas, deren Bundesland übereinstimmt, dürfen extra Chats erstellen
-  if (req.orga.bundesland !== bundesland) {
-    return res.status(403).json({ message: 'Du darfst nur Extra-Chats für dein eigenes Bundesland erstellen.' });
-  }
+  // Der Check, ob das Orga-Bundesland übereinstimmt, wurde entfernt
+
   const { name } = req.body;
   if (!name) {
     return res.status(400).json({ message: 'Name des Extra-Chats fehlt.' });
   }
+
   let extraChats = readExtraChats();
   const chatsForLand = extraChats.filter(chat => chat.bundesland === bundesland);
   if (chatsForLand.length >= 5) {
     return res.status(400).json({ message: 'Maximal 5 Extra-Chats pro Bundesland erlaubt.' });
   }
+
   // Generiere einen eindeutigen Dateinamen für die Chat-Nachrichten
-  const file = `extrachat_${bundesland}_${Date.now()}_${Math.floor(Math.random()*1000)}.json`;
+  const file = `extrachat_${bundesland}_${Date.now()}_${Math.floor(Math.random() * 1000)}.json`;
+
   // Erstelle leere Datei für Chat-Nachrichten
   fs.writeFileSync(path.join(chatsDir, file), JSON.stringify([]), 'utf8');
+
   const newChat = { bundesland, name, file };
   extraChats.push(newChat);
   writeExtraChats(extraChats);
+
   res.json({ message: 'Extra-Chat erstellt', chat: newChat });
 });
 
