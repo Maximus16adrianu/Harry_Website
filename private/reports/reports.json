@@ -1,0 +1,65 @@
+[
+  {
+    "id": "1743271742807_988",
+    "ip": "::ffff:127.0.0.1",
+    "timestamp": "2025-03-29T18:09:02.807Z",
+    "errorArea": "registration",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1743289110606_335",
+    "ip": "::1",
+    "timestamp": "2025-03-29T22:58:30.606Z",
+    "errorArea": "orga",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1743362874468_700",
+    "ip": "::1",
+    "timestamp": "2025-03-30T19:27:54.468Z",
+    "errorArea": "newsletter",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1743402810752_977",
+    "ip": "::1",
+    "timestamp": "2025-03-31T06:33:30.752Z",
+    "errorArea": "login",
+    "details": {
+      "description": "Passwort vergessen bzw. nicht gemerkt, da die Registrierung über das Handy nicht sichtbar funktionierte... im Hintergrund anscheinend doch (Benutzer: Gabi)"
+    }
+  },
+  {
+    "id": "1743516002585_931",
+    "ip": "::1",
+    "timestamp": "2025-04-01T14:00:02.585Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "Jeder Fascho ist ein Hurensohn ❤️"
+    }
+  },
+  {
+    "id": "1743776256252_670",
+    "ip": "::1",
+    "timestamp": "2025-04-04T14:17:36.252Z",
+    "errorArea": "newsletter",
+    "details": {
+      "description": "test\n"
+    }
+  },
+  {
+    "id": "1743778368172_188",
+    "ip": "::1",
+    "timestamp": "2025-04-04T14:52:48.172Z",
+    "errorArea": "chat",
+    "details": {
+      "description": ""
+    }
+  }
+]

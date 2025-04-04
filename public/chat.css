@@ -1,0 +1,232 @@
+/* Basis-Stile */
+body {
+  font-family: 'Roboto', 'Open Sans', sans-serif;
+  background: #f0f0f0;
+  margin: 0;
+  color: #333;
+}
+
+header {
+  background: #1a4d85;
+  color: #fff;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+header h1 {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+main {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Kanalliste: Nur Hauptchats */
+#channelList {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+#channelList .main-channel-btn {
+  display: inline-block;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  background-color: #1a4d85;
+  color: #fff;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+#channelList .main-channel-btn.active {
+  background-color: #00a7a7;
+}
+
+/* Chat-Header: Hier erscheinen beim Klick die Unterkategorien */
+#chatHeader {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #e0e0e0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#chatHeader .normal-chat-btn {
+  margin-right: 12px;
+  padding: 8px 14px;
+  background-color: #1a4d85;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+#chatHeader .normal-chat-btn.active {
+  background-color: #248529;
+}
+
+#chatHeader .extra-chat-btn {
+  margin-right: 8px;
+  margin-bottom: 6px;
+  padding: 6px 10px;
+  background-color: #0069c0;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#chatHeader .extra-chat-btn.active {
+  background-color: #15b630;
+}
+
+/* X-Button zum Löschen eines Extra-Chats */
+#chatHeader .delete-extra-btn {
+  margin-left: 4px;
+  background-color: #d32f2f;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  padding: 0 5px;
+  cursor: pointer;
+}
+
+/* Plus-Button zum Anlegen neuer Extra-Chats (nur für Orga) */
+#chatHeader .add-extra-btn {
+  margin-left: auto;
+  padding: 6px 10px;
+  background-color: #388e3c;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Chat Container und Nachrichten */
+#chatContainer {
+  height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+
+.message {
+  background-color: #fff;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.message.admin {
+  border-left: 4px solid #ffc107;
+}
+
+.message .meta {
+  font-size: 0.85em;
+  color: #666;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.message img {
+  max-width: 500px;
+  border: none;
+  border-radius: 8px;
+  margin-top: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.deleteBtn, .banBtn {
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8em;
+  margin-left: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+/* Formulare */
+#messageForm, #imageForm {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+#messageInput, #imageInput {
+  flex: 1;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 0.95em;
+}
+
+#messageForm button, #imageForm button {
+  padding: 10px 18px;
+  border: none;
+  background: #1a4d85;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+/* Mobile Anpassungen */
+@media (max-width: 600px) {
+  header {
+      padding: 12px 10px;
+  }
+  header h1 {
+      font-size: 1.25rem;
+  }
+  main {
+      padding: 12px;
+      margin: 0 5px;
+  }
+  #channelList, #chatHeader {
+      padding: 12px;
+  }
+  #chatContainer {
+      height: 300px;
+      padding: 8px;
+  }
+  #messageForm, #imageForm {
+      flex-direction: column;
+  }
+  #messageInput, #imageInput, #messageForm button, #imageForm button {
+      width: 100%;
+      margin: 4px 0;
+  }
+  .message img {
+      max-width: 100%;
+      height: auto;
+  }
+}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presseportal</title>
+  <link rel="stylesheet" href="presse.css">
+</head>
+<body>
+  <!-- Login-Overlay (initial versteckt) -->
+  <div id="loginOverlay" class="overlay">
+    <div class="login-box">
+      <h2>Organisator-Login</h2>
+      <input type="text" id="orgaUsername" placeholder="Benutzername">
+      <input type="password" id="orgaPassword" placeholder="Passwort">
+      <button id="loginBtn">Einloggen</button>
+      <button id="closeLogin">Schließen</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="header-left">
+      <h1>Presseportal</h1>
+      <!-- Info-Icon, nur sichtbar wenn eingeloggt -->
+      <button id="infoBtn" class="info-btn" title="Text-Commands anzeigen">i</button>
+    </div>
+    <!-- Button zum Öffnen des Login-Overlays -->
+    <button id="openLogin" class="login-toggle">Orga Login</button>
+  </header>
+  
+  <main>
+    <section class="content-container">
+      <div class="box" id="leftBox">
+        <h2>News 1</h2>
+        <p id="leftText" data-editable="false" data-rawtext="Hier steht der linke Presseinhalt.">
+          Hier steht der linke Presseinhalt.
+        </p>
+        <button class="edit-btn" data-target="leftText">Bearbeiten</button>
+      </div>
+      <div class="box" id="rightBox">
+        <h2>News 2</h2>
+        <p id="rightText" data-editable="false" data-rawtext="Hier steht der rechte Presseinhalt.">
+          Hier steht der rechte Presseinhalt.
+        </p>
+        <button class="edit-btn" data-target="rightText">Bearbeiten</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="email-container">
+      <a id="mailLink" href="mailto:Patrick-grossdemo@web.de">Patrick-grossdemo@web.de</a>
+      <!-- Edit-Button nur für Orgas -->
+      <button id="editMail" class="edit-mail-btn">Bearbeiten</button>
+      <div class="mail-options" id="mailOptions">
+        <a id="defaultMail" href="mailto:Patrick-grossdemo@web.de">Öffne standardmäßig</a>
+        <a id="gmailMail" href="https://mail.google.com/mail/?view=cm&fs=1&to=Patrick-grossdemo@web.de" target="_blank">Öffne mit Gmail</a>
+      </div>
+    </div>
+  </footer>
+  
+  <script src="presse.js"></script>
+</body>
+</html>

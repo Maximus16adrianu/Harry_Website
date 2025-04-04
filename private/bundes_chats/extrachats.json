@@ -1,0 +1,42 @@
+[
+  {
+    "bundesland": "Bayern",
+    "name": "Aschaffenburg ",
+    "file": "extrachat_Bayern_1743539104676_681.json"
+  },
+  {
+    "bundesland": "Bayern",
+    "name": "Nürnberg ",
+    "file": "extrachat_Bayern_1743539111841_381.json"
+  },
+  {
+    "bundesland": "Baden-Württemberg",
+    "name": "Reutlingen",
+    "file": "extrachat_Baden-Württemberg_1743610231317_133.json"
+  },
+  {
+    "bundesland": "Baden-Württemberg",
+    "name": "Balingen",
+    "file": "extrachat_Baden-Württemberg_1743610243531_482.json"
+  },
+  {
+    "bundesland": "Baden-Württemberg",
+    "name": "Karlsruhe",
+    "file": "extrachat_Baden-Württemberg_1743610250363_203.json"
+  },
+  {
+    "bundesland": "Schleswig-Holstein",
+    "name": "Bad Schwartau ",
+    "file": "extrachat_Schleswig-Holstein_1743617337266_670.json"
+  },
+  {
+    "bundesland": "Schleswig-Holstein",
+    "name": "Flensburg ",
+    "file": "extrachat_Schleswig-Holstein_1743617345306_763.json"
+  },
+  {
+    "bundesland": "Schleswig-Holstein",
+    "name": "Itzehoe ",
+    "file": "extrachat_Schleswig-Holstein_1743617351336_627.json"
+  }
+]
