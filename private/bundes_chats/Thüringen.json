@@ -1,18 +1,50 @@
 [
   {
-    "id": "1742996862937_449",
+    "id": "1750878003626_114",
     "user": "Klimamann",
-    "message": "Alle Informationen werden demnächst hier zur Verfügung gestellt, schaut einfach ab und zu mal rein !",
-    "timestamp": "2025-03-26T13:47:42.937Z",
+    "image": "1750878003624_327.png",
+    "timestamp": "2025-06-25T19:00:03.626Z",
     "pinned": false,
-    "rank": "Admin"
+    "rank": "Organisator (Berlin)"
   },
   {
-    "id": "1743616556343_445",
-    "user": "Sasa1987",
-    "image": "1743616556301_383.jpg",
-    "timestamp": "2025-04-02T17:55:56.343Z",
+    "id": "1750878022735_809",
+    "user": "Klimamann",
+    "image": "1750878022734_242.jpeg",
+    "timestamp": "2025-06-25T19:00:22.735Z",
     "pinned": false,
-    "rank": "Admin"
+    "rank": "Organisator (Berlin)"
+  },
+  {
+    "id": "1751023291703_102",
+    "user": "Danny.firstclass",
+    "message": "Thüringen bitte ins Saarland fahren ",
+    "timestamp": "2025-06-27T11:21:31.703Z",
+    "pinned": false,
+    "rank": "Organisator (Niedersachsen)"
+  },
+  {
+    "id": "1751023305831_507",
+    "user": "Danny.firstclass",
+    "image": "1751023305830_734.jpeg",
+    "timestamp": "2025-06-27T11:21:45.831Z",
+    "pinned": false,
+    "rank": "Organisator (Niedersachsen)"
+  },
+  {
+    "id": "1751023311021_788",
+    "user": "Danny.firstclass",
+    "message": "Oder Hessen ",
+    "timestamp": "2025-06-27T11:21:51.021Z",
+    "pinned": false,
+    "rank": "Organisator (Niedersachsen)"
+  },
+  {
+    "id": "1751023319968_81",
+    "user": "Danny.firstclass",
+    "image": "1751023319967_824.jpeg",
+    "timestamp": "2025-06-27T11:21:59.968Z",
+    "pinned": false,
+    "rank": "Organisator (Niedersachsen)"
   }
 ]

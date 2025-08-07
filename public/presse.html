@@ -2,63 +2,162 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Presseportal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🇩🇪 Presseportal</title>
   <link rel="stylesheet" href="presse.css">
 </head>
 <body>
-  <!-- Login-Overlay (initial versteckt) -->
-  <div id="loginOverlay" class="overlay">
-    <div class="login-box">
-      <h2>Organisator-Login</h2>
-      <input type="text" id="orgaUsername" placeholder="Benutzername">
-      <input type="password" id="orgaPassword" placeholder="Passwort">
-      <button id="loginBtn">Einloggen</button>
-      <button id="closeLogin">Schließen</button>
-    </div>
-  </div>
-
+  <!-- Header -->
   <header>
-    <div class="header-left">
-      <h1>Presseportal</h1>
-      <!-- Info-Icon, nur sichtbar wenn eingeloggt -->
-      <button id="infoBtn" class="info-btn" title="Text-Commands anzeigen">i</button>
+    <div class="header-content">
+      <div class="header-left">
+        <span class="flag">🇩🇪</span>
+        <div class="header-text">
+          <h1>Presseportal</h1>
+          <p class="subtitle">Deutsche Demo-Plattform</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="infoBtn" class="info-btn hidden">
+          ℹ️ Hilfe
+        </button>
+        <button id="openLogin" class="login-btn">
+          🏛️ Orga Login
+        </button>
+      </div>
     </div>
-    <!-- Button zum Öffnen des Login-Overlays -->
-    <button id="openLogin" class="login-toggle">Orga Login</button>
   </header>
-  
+
   <main>
-    <section class="content-container">
-      <div class="box" id="leftBox">
-        <h2>News 1</h2>
-        <p id="leftText" data-editable="false" data-rawtext="Hier steht der linke Presseinhalt.">
-          Hier steht der linke Presseinhalt.
-        </p>
-        <button class="edit-btn" data-target="leftText">Bearbeiten</button>
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <!-- Left News Box -->
+      <div class="news-box" id="leftBox">
+        <div class="news-header">
+          <h2>📰 News 1</h2>
+          <button class="edit-btn hidden" data-target="leftText">
+            ✏️ Bearbeiten
+          </button>
+        </div>
+        <div class="news-content">
+          <p id="leftText" data-editable="false" data-rawtext="Hier steht der linke Presseinhalt.">
+            Hier steht der linke Presseinhalt.
+          </p>
+        </div>
       </div>
-      <div class="box" id="rightBox">
-        <h2>News 2</h2>
-        <p id="rightText" data-editable="false" data-rawtext="Hier steht der rechte Presseinhalt.">
-          Hier steht der rechte Presseinhalt.
-        </p>
-        <button class="edit-btn" data-target="rightText">Bearbeiten</button>
+
+      <!-- Right News Box -->
+      <div class="news-box" id="rightBox">
+        <div class="news-header">
+          <h2>📰 News 2</h2>
+          <button class="edit-btn hidden" data-target="rightText">
+            ✏️ Bearbeiten
+          </button>
+        </div>
+        <div class="news-content">
+          <p id="rightText" data-editable="false" data-rawtext="Hier steht der rechte Presseinhalt.">
+            Hier steht der rechte Presseinhalt.
+          </p>
+        </div>
       </div>
-    </section>
+    </div>
   </main>
 
+  <!-- Footer -->
   <footer>
-    <div class="email-container">
-      <a id="mailLink" href="mailto:Patrick-grossdemo@web.de">Patrick-grossdemo@web.de</a>
-      <!-- Edit-Button nur für Orgas -->
-      <button id="editMail" class="edit-mail-btn">Bearbeiten</button>
-      <div class="mail-options" id="mailOptions">
-        <a id="defaultMail" href="mailto:Patrick-grossdemo@web.de">Öffne standardmäßig</a>
-        <a id="gmailMail" href="https://mail.google.com/mail/?view=cm&fs=1&to=Patrick-grossdemo@web.de" target="_blank">Öffne mit Gmail</a>
+    <div class="footer-content">
+      <div class="contact-section">
+        <h3>📧 Pressekontakt</h3>
+        <div class="email-container">
+          <a id="mailLink" href="mailto:Patrick-grossdemo@web.de" class="email-link">
+            Patrick-grossdemo@web.de
+          </a>
+          <button id="editMail" class="edit-mail-btn hidden">
+            ✏️ Bearbeiten
+          </button>
+        </div>
+        <div class="mail-options">
+          <a id="defaultMail" href="mailto:Patrick-grossdemo@web.de" class="mail-option">
+            📬 Standard E-Mail
+          </a>
+          <a id="gmailMail" href="https://mail.google.com/mail/?view=cm&fs=1&to=Patrick-grossdemo@web.de" target="_blank" class="mail-option">
+            📧 Gmail öffnen
+          </a>
+        </div>
       </div>
     </div>
   </footer>
-  
+
+  <!-- Login Modal -->
+  <div id="loginOverlay" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🏛️ Organisator-Login</h2>
+        <button id="closeLogin" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="loginForm" class="login-form">
+          <div class="input-group">
+            <input type="text" id="orgaUsername" placeholder="Benutzername eingeben..." required>
+          </div>
+          <div class="input-group">
+            <input type="password" id="orgaPassword" placeholder="Passwort eingeben..." required>
+          </div>
+          <button type="submit" id="loginBtn" class="login-submit-btn">
+            🔑 Anmelden
+          </button>
+        </form>
+        <div id="loginError" class="error-message hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Modal -->
+  <div id="infoModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>ℹ️ Text-Commands Hilfe</h2>
+        <button id="closeInfo" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="help-content">
+          <h3>📝 Verfügbare Text-Commands:</h3>
+          <div class="command-example">
+            <strong>#Farbe:Text#</strong>
+            <p>Färbt "Text" in der angegebenen Farbe</p>
+            <div class="example">
+              <strong>Beispiel:</strong> <code>#red:Wichtige Meldung#</code><br>
+              <strong>Ergebnis:</strong> <span style="color: red;">Wichtige Meldung</span>
+            </div>
+          </div>
+          <div class="command-example">
+            <strong>Verfügbare Farben:</strong>
+            <div class="color-grid">
+              <span class="color-tag" style="color: red;">red</span>
+              <span class="color-tag" style="color: blue;">blue</span>
+              <span class="color-tag" style="color: green;">green</span>
+              <span class="color-tag" style="color: orange;">orange</span>
+              <span class="color-tag" style="color: purple;">purple</span>
+              <span class="color-tag" style="color: #d4182a;">#d4182a</span>
+            </div>
+          </div>
+          <p class="help-note">💡 Weitere Commands können in Zukunft hinzugefügt werden.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Lädt...</p>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer" class="notification-container"></div>
+
   <script src="presse.js"></script>
 </body>
 </html>

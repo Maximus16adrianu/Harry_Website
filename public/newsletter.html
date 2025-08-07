@@ -2,20 +2,125 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Newsletter-Anmeldung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🇩🇪 Newsletter-Anmeldung</title>
   <link rel="stylesheet" href="newsletter.css">
 </head>
 <body>
-  <h1>Newsletter</h1>
-  <p>Wenn es wichtige Infos gibt, kannst du dich hier eintragen, um per E-Mail benachrichtigt zu werden.</p>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <div class="header-left">
+        <span class="flag">🇩🇪</span>
+        <div class="header-text">
+          <h1>Newsletter</h1>
+          <p class="subtitle">Deutsche Demo-Plattform</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <a href="main.html" class="back-link">
+          🏠 Zur Startseite
+        </a>
+      </div>
+    </div>
+  </header>
 
-  <form id="newsletterForm">
-    <label for="emailInput">E-Mail-Adresse (anonym):</label>
-    <input type="email" id="emailInput" required>
-    <button type="submit">Abonnieren</button>
-  </form>
+  <main>
+    <!-- Newsletter Section -->
+    <section class="newsletter-section">
+      <div class="newsletter-container">
+        <div class="newsletter-card">
+          <div class="newsletter-header">
+            <h2>📧 Newsletter abonnieren</h2>
+            <p>Bleiben Sie über wichtige Demo-Informationen auf dem Laufenden</p>
+          </div>
+          
+          <div class="newsletter-content">
+            <div class="info-box">
+              <div class="info-icon">📬</div>
+              <div class="info-text">
+                <h3>Warum Newsletter?</h3>
+                <p>Wenn es wichtige Informationen zur Demo-Bewegung gibt, können Sie sich hier eintragen, um per E-Mail benachrichtigt zu werden.</p>
+                <ul class="benefits-list">
+                  <li>✅ Wichtige Demo-Termine</li>
+                  <li>✅ Aktuelle Entwicklungen</li>
+                  <li>✅ Organisatorische Hinweise</li>
+                  <li>✅ Vollständig anonym</li>
+                </ul>
+              </div>
+            </div>
 
-  <div id="message"></div>
+            <form id="newsletterForm" class="newsletter-form">
+              <div class="form-group">
+                <label for="emailInput">E-Mail-Adresse (anonym)</label>
+                <div class="input-container">
+                  <input type="email" id="emailInput" placeholder="ihre.email@beispiel.de" required>
+                  <span class="input-icon">📧</span>
+                </div>
+                <div class="form-hint">Ihre E-Mail wird vertraulich behandelt und nicht weitergegeben</div>
+              </div>
+              
+              <button type="submit" class="subscribe-btn">
+                📧 Jetzt abonnieren
+              </button>
+            </form>
+
+            <div class="privacy-note">
+              <div class="privacy-icon">🔒</div>
+              <div class="privacy-text">
+                <h4>Datenschutz</h4>
+                <p>Ihre E-Mail-Adresse wird ausschließlich für Demo-Newsletter verwendet und niemals an Dritte weitergegeben.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Message Display -->
+    <div id="message" class="message-container hidden"></div>
+  </main>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal hidden">
+    <div class="modal-content success-modal">
+      <div class="modal-header success-header">
+        <h2>✅ Erfolgreich abonniert!</h2>
+      </div>
+      <div class="modal-body">
+        <div class="success-content">
+          <div class="success-icon">🎉</div>
+          <h3>Willkommen im Newsletter!</h3>
+          <p>Sie erhalten ab sofort wichtige Informationen zur Demo-Bewegung per E-Mail.</p>
+          
+          <div class="next-steps">
+            <h4>📋 Was passiert als nächstes?</h4>
+            <ul>
+              <li>📬 Sie erhalten eine Bestätigung (falls verfügbar)</li>
+              <li>📧 Wichtige Demo-Infos kommen direkt zu Ihnen</li>
+              <li>🔄 Sie können sich jederzeit wieder abmelden</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="closeSuccessModal" class="close-btn">
+          👍 Verstanden
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Anmeldung wird verarbeitet...</p>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer" class="notification-container"></div>
 
   <script src="newsletter.js"></script>
 </body>

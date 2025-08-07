@@ -2,141 +2,238 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DEMO DEUTSCHLAND</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🇩🇪 DEMO DEUTSCHLAND</title>
   <link rel="stylesheet" href="main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- Header -->
   <header>
-    <!-- Beim Klick wird jetzt die global verfügbare Funktion toggleMobileNav aufgerufen -->
-    <button class="mobile-menu-btn" onclick="toggleMobileNav(event)">&#9776;</button>
-    <h1>Großdemo in allen 16 Bundesländern</h1>
+    <div class="header-content">
+      <div class="header-left">
+        <button class="mobile-menu-btn" onclick="toggleMobileNav(event)">
+          ☰
+        </button>
+        <span class="flag">🇩🇪</span>
+        <div class="header-text">
+          <h1>Großdemo in allen 16 Bundesländern</h1>
+          <p class="subtitle">Absolut Parteilos | Wir sind das Volk</p>
+        </div>
+      </div>
+    </div>
   </header>
 
   <!-- Mobile Navigation -->
   <nav class="mobile-nav" id="mobileNav">
-    <ul>
-      <li class="admin-item"><a href="admin.html">Admin</a></li>
-      <li class="admin-item"><a href="orga.html">Orga</a></li>
-      <li><a href="newsletter.html">Newsletter</a></li>
-      <li><a href="presse.html">Presse</a></li>
-      <!-- Neuer Menüpunkt: Melde Fehler -->
-      <li><button class="report-error-btn" onclick="openReportModal()">Melde Fehler</button></li>
-    </ul>
+    <div class="mobile-nav-content">
+      <div class="mobile-nav-header">
+        <span class="flag">🇩🇪</span>
+        <h3>Navigation</h3>
+        <button class="mobile-nav-close" onclick="toggleMobileNav(event)">&times;</button>
+      </div>
+      <ul>
+        <li class="admin-item"><a href="admin.html">🔧 Admin</a></li>
+        <li class="admin-item"><a href="orga.html">🏛️ Orga</a></li>
+        <li><a href="#section1">🏠 Willkommen</a></li>
+        <li><a href="#section2">🖼️ Bilder</a></li>
+        <li><a href="#gallery">🌍 Bundesländer</a></li>
+        <li><a href="newsletter.html">📧 Newsletter</a></li>
+        <li><a href="presse.html">📰 Presse</a></li>
+        <li><button class="report-error-btn" onclick="openReportModal()">🐛 Melde Fehler</button></li>
+      </ul>
+    </div>
   </nav>
 
-  <!-- Sidebar (Desktop-Navigation) -->
+  <!-- Sidebar (Desktop Navigation) -->
   <nav class="sidebar">
+    <div class="sidebar-header">
+      <span class="flag">🇩🇪</span>
+      <h2>Demo Deutschland</h2>
+    </div>
     <ul>
-      <li class="admin-item"><a href="admin.html">Admin</a></li>
-      <li class="admin-item"><a href="orga.html">Orga</a></li>
-      <li><a href="#section1">Willkommen</a></li>
-      <li><a href="#section2">Bilder</a></li>
-      <li><a href="newsletter.html">Newsletter</a></li>
-      <li><a href="presse.html">Presse</a></li>
-      <!-- Neuer Menüpunkt: Melde Fehler -->
-      <li><button class="report-error-btn" onclick="openReportModal()">Melde Fehler</button></li>
+      <li class="admin-item"><a href="admin.html">🔧 Admin</a></li>
+      <li class="admin-item"><a href="orga.html">🏛️ Orga</a></li>
+      <li><a href="#section1">🏠 Willkommen</a></li>
+      <li><a href="#section2">🖼️ Bilder</a></li>
+      <li><a href="#gallery">🌍 Bundesländer</a></li>
+      <li><a href="newsletter.html">📧 Newsletter</a></li>
+      <li><a href="presse.html">📰 Presse</a></li>
+      <li><button class="report-error-btn" onclick="openReportModal()">🐛 Melde Fehler</button></li>
     </ul>
   </nav>
 
   <main>
-    <!-- Willkommen-Section -->
+    <!-- Welcome Section -->
     <section id="section1" class="welcome-section">
-      <div class="welcome-text">
-        <h2>Herzlich Willkommen</h2>
-        <h3>_____Absolut Parteilos | Wir sind das Volk_____</h3>
-        <p>Vielen Dank für euer Interesse</p>
-        <div class="chat-container">
-          <div class="chat-info-group">
-            <span class="info-text">alle infos</span>
-            <span class="arrow">&#8594;</span>
+      <div class="welcome-card">
+        <div class="welcome-text">
+          <h2>Herzlich Willkommen</h2>
+          <h3>Absolut Parteilos | Wir sind das Volk</h3>
+          <p>Vielen Dank für euer Interesse an der deutschen Demo-Bewegung</p>
+          
+          <div class="chat-container">
+            <div class="chat-info-group">
+              <span class="info-text">alle infos</span>
+              <span class="arrow">→</span>
+            </div>
+            <a href="chat.html" class="chat-button">
+              💬 Zur Chat-Website
+            </a>
+            <div class="chat-info-group">
+              <span class="arrow">←</span>
+              <span class="info-text">alle infos</span>
+            </div>
           </div>
-          <a href="chat.html" class="chat-button">Zur Chat-Website</a>
-          <div class="chat-info-group">
-            <span class="arrow">&#8592;</span>
-            <span class="info-text">alle infos</span>
+        </div>
+        
+        <div class="welcome-video">
+          <video id="intro-video" controls autoplay loop muted>
+            <source src="/api/media/video/video1.mp4" type="video/mp4">
+            Ihr Browser unterstützt kein HTML5-Video.
+          </video>
+          <div class="video-overlay">
+            <button class="play-button" id="playButton">▶️</button>
           </div>
         </div>
       </div>
-      <div class="welcome-video">
-        <!-- Video wird jetzt über den API-Endpunkt geladen -->
-        <video id="intro-video" controls autoplay loop muted>
-          <source src="/api/media/video/video1.mp4" type="video/mp4">
-          Dein Browser unterstützt kein HTML5-Video.
-        </video>
-      </div>
     </section>
     
-    <!-- Bilder-Section: Bild 1 und Bild 2 -->
-    <section id="section2" class="images">
-      <h2>Bilder</h2>
+    <!-- Images Section -->
+    <section id="section2" class="images-section">
+      <div class="section-header">
+        <h2>🖼️ Bilder</h2>
+      </div>
       <div class="image-container">
-        <img src="/api/media/image/bild1.png" alt="Bild 1">
-        <img src="/api/media/image/bild2.png" alt="Bild 2">
+        <div class="image-card">
+          <img src="/api/media/image/bild1.png" alt="Demo Bild 1" onclick="openImageModal(this.src)">
+        </div>
+        <div class="image-card">
+          <img src="/api/media/image/bild2.png" alt="Demo Bild 2" onclick="openImageModal(this.src)">
+        </div>
       </div>
     </section>
     
-    <!-- Neue Galerie für Bilder 3 bis 19 -->
-    <section id="gallery" class="gallery">
-      <h2>Hier blättern für Bundesländer</h2>
-      <div class="gallery-container">
-        <button id="prev">Zurück</button>
-        <img id="gallery-image" src="/api/media/image/bild3.png" alt="Gallery Image">
-        <button id="next">Weiter</button>
+    <!-- Gallery Section -->
+    <section id="gallery" class="gallery-section">
+      <div class="section-header">
+        <h2>🌍 Hier blättern für Bundesländer</h2>
+        <p>Entdecken Sie die Demo-Bewegung in allen 16 Bundesländern</p>
       </div>
-      <p class="gallery-hint">Benutzen Sie die Schaltflächen, um durch die Galerie zu blättern.</p>
+      
+      <div class="gallery-container">
+        <button id="prev" class="gallery-btn prev-btn">
+          ← Zurück
+        </button>
+        
+        <div class="gallery-image-container">
+          <img id="gallery-image" src="/api/media/image/bild3.png" alt="Bundesland Gallery" onclick="openImageModal(this.src)">
+          <div class="gallery-counter">
+            <span id="currentImage">1</span> / <span id="totalImages">17</span>
+          </div>
+        </div>
+        
+        <button id="next" class="gallery-btn next-btn">
+          Weiter →
+        </button>
+      </div>
+      
+      <div class="gallery-controls">
+        <div class="gallery-hint">
+          <p>💡 Verwenden Sie die Pfeiltasten oder klicken Sie auf die Schaltflächen</p>
+        </div>
+        <div class="gallery-dots" id="galleryDots"></div>
+      </div>
     </section>
   </main>
 
-  <footer id="footer">
-    <p>© 2025 DEMO DEUTSCHLAND. Alle Rechte vorbehalten.</p>
-    <!-- Neuer Button für Impressum -->
-    <button class="impressum-btn" onclick="openImpressumModal()">Impressum</button>
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-info">
+        <p>© 2025 DEMO DEUTSCHLAND. Alle Rechte vorbehalten.</p>
+        <p>Wir sind das Volk - Absolut Parteilos</p>
+      </div>
+      <div class="footer-actions">
+        <button class="impressum-btn" onclick="openImpressumModal()">
+          📄 Impressum
+        </button>
+      </div>
+    </div>
   </footer>
 
-  <!-- Modal für "Melde Fehler" -->
-  <div id="reportModal" class="modal">
+  <!-- Report Error Modal -->
+  <div id="reportModal" class="modal hidden">
     <div class="modal-content">
-      <span class="close" onclick="closeReportModal()">&times;</span>
-      <h2>Fehler melden</h2>
-      <form id="reportForm">
-        <!-- Schritt 1: Bereichsauswahl -->
-        <label for="errorArea">Wo ist der Fehler aufgetreten?</label>
-        <select id="errorArea" name="errorArea" required onchange="handleAreaChange()">
-          <option value="">Bitte auswählen</option>
-          <option value="chat">Im Chat</option>
-          <option value="registration">Bei der Registrierung</option>
-          <option value="login">Beim Login</option>
-          <option value="orga">Auf der Orga-Seite</option>
-          <option value="homepage">Auf der Startseite</option>
-          <option value="newsletter">Im Newsletter</option>
-        </select>
+      <div class="modal-header">
+        <h2>🐛 Fehler melden</h2>
+        <button class="modal-close" onclick="closeReportModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="reportForm">
+          <div class="form-group">
+            <label for="errorArea">Wo ist der Fehler aufgetreten?</label>
+            <select id="errorArea" name="errorArea" required onchange="handleAreaChange()">
+              <option value="">Bitte auswählen</option>
+              <option value="chat">💬 Im Chat</option>
+              <option value="registration">📝 Bei der Registrierung</option>
+              <option value="login">🔑 Beim Login</option>
+              <option value="orga">🏛️ Auf der Orga-Seite</option>
+              <option value="homepage">🏠 Auf der Startseite</option>
+              <option value="newsletter">📧 Im Newsletter</option>
+            </select>
+          </div>
 
-        <!-- Dynamisch eingefügte Fragen -->
-        <div id="dynamicQuestions"></div>
+          <div id="dynamicQuestions" class="dynamic-questions"></div>
 
-        <button type="submit">Fehler absenden</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal für Impressum -->
-  <div id="impressumModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeImpressumModal()">&times;</span>
-      <h2>Impressum</h2>
-      <div id="impressumContent">
-        <!-- Hier werden die Impressumsdaten angezeigt -->
-        <p><strong>Vorname:</strong> Max</p>
-        <p><strong>Nachname:</strong> Mustermann</p>
-        <p><strong>Adresse:</strong> Musterstraße 1</p>
-        <p><strong>Adresszusatz:</strong> EG, links</p>
-        <p><strong>Stadt:</strong> Musterstadt</p>
-        <p><strong>Email:</strong> max@mustermann.de</p>
+          <button type="submit" class="submit-btn">
+            📤 Fehler absenden
+          </button>
+        </form>
       </div>
     </div>
   </div>
+
+  <!-- Impressum Modal -->
+  <div id="impressumModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📄 Impressum</h2>
+        <button class="modal-close" onclick="closeImpressumModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="impressumContent" class="impressum-content">
+          <div class="loading-placeholder">
+            <div class="spinner"></div>
+            <p>Lädt Impressum...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Modal -->
+  <div id="imageModal" class="modal hidden">
+    <div class="modal-content image-modal-content">
+      <div class="modal-header">
+        <h2>🖼️ Bildansicht</h2>
+        <button class="modal-close" onclick="closeImageModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <img id="modalImage" class="modal-image" src="" alt="Vergrößertes Bild">
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Lädt...</p>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer" class="notification-container"></div>
 
   <script src="main.js"></script>
 </body>

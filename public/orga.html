@@ -2,57 +2,136 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <!-- Viewport hinzufügen für responsives Design -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Organisator Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🇩🇪 Organisator Chat</title>
   <link rel="stylesheet" href="orga.css">
 </head>
 <body>
-  <div id="login-container">
-    <h2>Organisator Login</h2>
-    <form id="login-form">
-      <label for="orgaUsername">Username:</label>
-      <input type="text" id="orgaUsername" name="orgaUsername" required>
-      <label for="orgaPassword">Passwort:</label>
-      <input type="password" id="orgaPassword" name="orgaPassword" required>
-      <button type="submit">Einloggen</button>
-    </form>
-    <div id="login-error" class="error"></div>
-  </div>
-
-  <div id="chat-container" style="display:none;">
-    <div id="chat-header">
-      <h2>Orga Chat</h2>
-      <div id="header-buttons">
-        <button id="pinned-btn">Angepinnte Nachrichten</button>
-        <button id="logout-btn">Ausloggen</button>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <div class="header-left">
+        <span class="flag">🇩🇪</span>
+        <div class="header-text">
+          <h1>Organisator Chat</h1>
+          <p class="subtitle">Deutsche Demo-Plattform</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="pinned-btn" class="header-btn hidden">
+          📌 Angepinnte Nachrichten
+        </button>
+        <button id="logout-btn" class="logout-btn hidden">
+          🚪 Ausloggen
+        </button>
       </div>
     </div>
-    <div id="chat-messages"></div>
-    <form id="chat-form">
-      <input type="text" id="chat-input" placeholder="Nachricht eingeben..." required>
-      <button type="submit">Senden</button>
-    </form>
-    <form id="upload-form">
-      <input type="file" id="imageInput" accept="image/*">
-      <button type="button" id="upload-btn">Bild senden</button>
-    </form>
-  </div>
+  </header>
 
-  <!-- Modal für Bildvergrößerung -->
-  <div id="modal" class="modal">
-    <span id="close-modal">&times;</span>
-    <img class="modal-content" id="modal-img">
-  </div>
+  <main>
+    <!-- Login Section -->
+    <section id="login-section" class="login-section">
+      <div class="login-container">
+        <div class="login-card">
+          <div class="login-header">
+            <h2>🏛️ Organisator Anmeldung</h2>
+            <p>Bitte melden Sie sich mit Ihren Organisator-Zugangsdaten an</p>
+          </div>
+          
+          <form id="login-form" class="login-form">
+            <div class="input-group">
+              <input type="text" id="orgaUsername" name="orgaUsername" placeholder="Benutzername eingeben..." required>
+            </div>
+            <div class="input-group">
+              <input type="password" id="orgaPassword" name="orgaPassword" placeholder="Passwort eingeben..." required>
+            </div>
+            <button type="submit" class="login-btn">Anmelden</button>
+          </form>
+          
+          <div id="login-error" class="error-message hidden"></div>
+        </div>
+      </div>
+    </section>
 
-  <!-- Container für angepinnte Nachrichten -->
-  <div id="pinned-container" style="display:none;">
-    <div id="pinned-header">
-      <h2>Angepinnte Nachrichten</h2>
-      <button id="close-pinned">Schließen</button>
+    <!-- Chat Interface -->
+    <section id="chat-section" class="chat-interface hidden">
+      <!-- Chat Panel -->
+      <div class="chat-panel">
+        <!-- Messages Container -->
+        <div class="messages-container">
+          <div id="chat-messages" class="chat-messages">
+            <div class="welcome-message">
+              <h3>🏛️ Willkommen im Organisator Chat</h3>
+              <p>Hier können Sie sich mit anderen Organisatoren austauschen und wichtige Nachrichten anpinnen.</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Input Panel -->
+        <div class="input-panel">
+          <!-- Message Form -->
+          <form id="chat-form" class="message-form">
+            <div class="message-input-container">
+              <input type="text" id="chat-input" placeholder="Nachricht an andere Organisatoren..." required>
+              <button type="submit" class="send-btn">
+                📤 Senden
+              </button>
+            </div>
+          </form>
+          
+          <!-- Image Form -->
+          <form id="upload-form" class="image-form">
+            <div class="image-input-container">
+              <label for="imageInput" class="file-label">
+                🖼️ Bild auswählen
+              </label>
+              <input type="file" id="imageInput" accept="image/*" class="file-input">
+              <button type="button" id="upload-btn" class="upload-btn">
+                📸 Bild senden
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pinned Messages Modal -->
+    <div id="pinned-container" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>📌 Angepinnte Nachrichten</h2>
+          <button id="close-pinned" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="pinned-messages" class="pinned-messages-list"></div>
+        </div>
+      </div>
     </div>
-    <div id="pinned-messages"></div>
+
+    <!-- Image Modal -->
+    <div id="image-modal" class="modal hidden">
+      <div class="modal-content image-modal-content">
+        <div class="modal-header">
+          <h2>🖼️ Bildansicht</h2>
+          <button id="close-image-modal" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <img id="modal-img" class="modal-image" src="" alt="Vergrößertes Bild">
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Lädt...</p>
+    </div>
   </div>
+
+  <!-- Notification Container -->
+  <div id="notification-container" class="notification-container"></div>
 
   <script src="orga.js"></script>
 </body>

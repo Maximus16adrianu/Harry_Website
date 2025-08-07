@@ -2,68 +2,135 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <!-- user-scalable=yes erlaubt das Zoomen auf Mobilgeräten -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Konto erstellen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🇩🇪 Konto erstellen</title>
   <link rel="stylesheet" href="register.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  
-  <!-- Zusätzliche Popup-Stile -->
-  <style>
-  </style>
-  
 </head>
 <body>
+  <!-- Header -->
   <header>
-    <h1>Neues Konto erstellen</h1>
+    <div class="header-content">
+      <div class="header-left">
+        <span class="flag">🇩🇪</span>
+        <div class="header-text">
+          <h1>Konto erstellen</h1>
+          <p class="subtitle">Deutsche Demo-Plattform</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <a href="chat.html" class="login-link-header">
+          🔑 Bereits registriert?
+        </a>
+      </div>
+    </div>
   </header>
+
   <main>
-    <form id="registerForm">
-      <h2>Persönliche Daten</h2>
-      
-      <div class="form-group">
-        <label for="username">Benutzername</label>
-        <input type="text" id="username" name="username" placeholder="Benutzername eingeben" required>
+    <!-- Registration Section -->
+    <section class="registration-section">
+      <div class="registration-container">
+        <div class="registration-card">
+          <div class="registration-header">
+            <h2>📝 Neues Konto erstellen</h2>
+            <p>Treten Sie der deutschen Demo-Bewegung bei</p>
+          </div>
+          
+          <form id="registerForm" class="registration-form">
+            <div class="form-section">
+              <h3>👤 Persönliche Daten</h3>
+              
+              <div class="form-group">
+                <label for="username">Benutzername</label>
+                <input type="text" id="username" name="username" placeholder="Benutzername eingeben..." required>
+                <div class="form-hint">Mindestens 3 Zeichen, nur Buchstaben und Zahlen</div>
+              </div>
+              
+              <div class="form-group">
+                <label for="password">Passwort</label>
+                <input type="password" id="password" name="password" placeholder="Sicheres Passwort wählen..." required>
+                <div class="form-hint">8-20 Zeichen mit Groß-/Kleinbuchstaben, Zahlen und Sonderzeichen</div>
+              </div>
+              
+              <div class="form-group">
+                <label for="passwordConfirm">Passwort bestätigen</label>
+                <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="Passwort wiederholen..." required>
+                <div class="form-hint">Beide Passwörter müssen übereinstimmen</div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>📋 Bestätigung</h3>
+              
+              <div class="form-terms">
+                <div class="checkbox-container">
+                  <input type="checkbox" id="terms" name="terms" required>
+                  <label for="terms" class="checkbox-label">
+                    <span class="checkmark"></span>
+                    Hiermit bestätige ich, dass ich kein Hater bin und die Demo-Bewegung unterstütze
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+              🚀 Konto erstellen
+            </button>
+          </form>
+          
+          <div class="registration-footer">
+            <p>Bereits registriert? <a href="chat.html" class="login-link">Hier anmelden</a></p>
+          </div>
+        </div>
       </div>
-      
-      <div class="form-group">
-        <label for="password">Passwort</label>
-        <input type="password" id="password" name="password" placeholder="Sicheres Passwort wählen" required>
-        <small class="form-hint">Mindestens 8 Zeichen mit Zahlen und Sonderzeichen</small>
-      </div>
-      
-      <div class="form-group">
-        <label for="passwordConfirm">Passwort bestätigen</label>
-        <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="Passwort wiederholen" required>
-      </div>
-      
-      <div class="form-terms">
-        <input type="checkbox" id="terms" name="terms" required>
-        <label for="terms">Hiermit bestätige ich das ich kein hater bin</label>
-      </div>
-      
-      <button type="submit">Konto erstellen</button>
-      
-      <div class="login-link">
-        Bereits registriert? <a href="chat.html">Hier anmelden</a>
-      </div>
-    </form>
-    
-    <div id="message" class="hidden"></div>
+    </section>
+
+    <!-- Message Display -->
+    <div id="message" class="message-container hidden"></div>
   </main>
-  
-  <!-- Popup-Element -->
-  <div id="popup" class="popup hidden">
-    <div class="popup-content">
-      <p>
-        Ein Admin wird Ihre Anfrage in Kürze bestätigen.<br>
-        Probieren Sie sich in Kürze anzumelden.
-      </p>
-      <button id="closePopup">Schließen</button>
+
+  <!-- Success Popup -->
+  <div id="popup" class="modal hidden">
+    <div class="modal-content success-modal">
+      <div class="modal-header success-header">
+        <h2>✅ Registrierung erfolgreich!</h2>
+      </div>
+      <div class="modal-body">
+        <div class="success-content">
+          <div class="success-icon">🎉</div>
+          <h3>Willkommen bei der Demo-Bewegung!</h3>
+          <p>
+            Ein Administrator wird Ihre Anfrage in Kürze bestätigen.<br>
+            Sie erhalten eine Benachrichtigung, sobald Ihr Konto freigeschaltet wurde.
+          </p>
+          <div class="next-steps">
+            <h4>📋 Nächste Schritte:</h4>
+            <ul>
+              <li>✉️ Prüfen Sie Ihre E-Mails regelmäßig</li>
+              <li>🔄 Versuchen Sie sich in 1-2 Stunden anzumelden</li>
+              <li>📞 Bei Fragen kontaktieren Sie unseren Support</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="closePopup" class="popup-close-btn">
+          🏠 Zur Startseite
+        </button>
+      </div>
     </div>
   </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Konto wird erstellt...</p>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer" class="notification-container"></div>
+
   <script src="register.js"></script>
 </body>
 </html>

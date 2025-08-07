@@ -2,56 +2,160 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Chat Bereich</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="chat.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Beispiel: Roboto als Schriftart -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- Header mit deutschem Branding -->
   <header>
-    <h1>Chat Bereich</h1>
-    <button id="logoutBtn">Logout</button>
+    <div class="header-content">
+      <div class="header-left">
+        <button class="mobile-menu-btn">
+          ☰
+        </button>
+        <span class="flag">🇩🇪</span>
+        <h1>Demo Chat</h1>
+      </div>
+      <div class="header-right">
+        <button id="logoutBtn" class="logout-btn">
+          <span>🚪</span>
+          Ausloggen
+        </button>
+      </div>
+    </div>
   </header>
+
   <main>
-    <!-- Login-Bereich -->
-    <div id="loginSection" class="hidden">
-      <h2>Bitte einloggen oder registrieren</h2>
-      <form id="loginForm">
-        <input type="text" name="username" placeholder="Benutzername" required>
-        <input type="password" name="password" placeholder="Passwort" required>
-        <button type="submit">Einloggen</button>
-      </form>
-      <button id="toRegisterButton">Registrieren</button>
-    </div>
+    <!-- Login-Sektion -->
+    <section id="loginSection" class="login-section hidden">
+      <div class="login-container">
+        <div class="login-card">
+          <div class="login-header">
+            <h2>🔐 Anmeldung</h2>
+            <p>Willkommen bei der deutschen Demo-Plattform</p>
+          </div>
+          
+          <form id="loginForm" class="login-form">
+            <div class="input-group">
+              <input type="text" name="username" placeholder="Benutzername" required>
+            </div>
+            <div class="input-group">
+              <input type="password" name="password" placeholder="Passwort" required>
+            </div>
+            <button type="submit" class="login-btn">
+              Einloggen
+            </button>
+          </form>
+          
+          <div class="login-footer">
+            <p>Noch kein Konto?</p>
+            <button id="toRegisterButton" class="register-btn">
+              Jetzt registrieren
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <!-- Chat-Bereich -->
-    <div id="chatInterface" class="hidden">
-      <div id="channelList">
-        <!-- Nur Hauptchats (Bundesländer + evtl. admin_chat) -->
+    <!-- Chat-Interface -->
+    <section id="chatInterface" class="chat-interface hidden">
+      <!-- Mobile Navigation -->
+      <nav class="mobile-nav" id="mobileNav">
+        <div class="mobile-nav-content">
+          <div class="mobile-nav-header">
+            <span class="flag">🇩🇪</span>
+            <h3>🏛️ Bundesländer</h3>
+            <button class="mobile-nav-close">&times;</button>
+          </div>
+          <div id="mobileChannelList" class="mobile-channel-list">
+            <!-- Channels werden hier geladen -->
+          </div>
+        </div>
+      </nav>
+
+      <!-- Bundesländer-Navigation (Desktop) -->
+      <div class="navigation-panel">
+        <div class="nav-header">
+          <h3>🏛️ Bundesländer</h3>
+        </div>
+        <div id="channelList" class="channel-list">
+          <!-- Hauptchats (Bundesländer) werden hier geladen -->
+        </div>
       </div>
 
-      <!-- Chat-Header: Wird nach Klick auf einen Hauptchat eingeblendet -->
-      <div id="chatHeader" class="hidden"></div>
+      <!-- Chat-Bereich -->
+      <div class="chat-panel">
+        <!-- Sub-Navigation für Extra-Chats -->
+        <div id="chatHeader" class="chat-header hidden">
+          <div class="chat-tabs">
+            <!-- Normal-Chat und Extra-Chat Buttons -->
+          </div>
+        </div>
 
-      <div id="chatContainer">
-        <!-- Chatnachrichten -->
+        <!-- Nachrichten-Container -->
+        <div class="messages-container">
+          <div id="chatContainer" class="chat-messages">
+            <div class="welcome-message">
+              <h3>Willkommen im Demo Chat!</h3>
+              <p>Wählen Sie ein Bundesland aus, um zu beginnen.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Eingabe-Bereich -->
+        <div class="input-panel">
+          <!-- Text-Nachricht -->
+          <form id="messageForm" class="message-form">
+            <div class="message-input-container">
+              <input type="text" 
+                     id="messageInput" 
+                     name="message" 
+                     placeholder="Schreiben Sie Ihre Nachricht..." 
+                     required
+                     maxlength="1000">
+              <button type="submit" class="send-btn">
+                <span>📤</span>
+                Senden
+              </button>
+            </div>
+          </form>
+
+          <!-- Bild-Upload (nur für Admins/Orgas) -->
+          <form id="imageForm" class="image-form hidden" enctype="multipart/form-data">
+            <div class="image-input-container">
+              <input type="file" 
+                     id="imageInput" 
+                     name="image" 
+                     accept="image/*"
+                     class="file-input">
+              <label for="imageInput" class="file-label">
+                <span>🖼️</span>
+                Bild auswählen
+              </label>
+              <button type="submit" class="upload-btn">
+                <span>📸</span>
+                Bild senden
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-
-      <form id="messageForm">
-        <input type="text" id="messageInput" name="message" placeholder="Deine Nachricht" required>
-        <button type="submit">Senden</button>
-      </form>
-
-      <!-- Bild-Upload (nur für Admins) -->
-      <form id="imageForm" class="hidden" enctype="multipart/form-data">
-        <input type="file" id="imageInput" name="image" accept="image/*">
-        <button type="submit">Bild senden</button>
-      </form>
-    </div>
+    </section>
   </main>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Lädt...</p>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer" class="notification-container"></div>
 
   <script src="chat.js"></script>
 </body>
