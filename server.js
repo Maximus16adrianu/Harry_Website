@@ -12,6 +12,30 @@ app.set('trust proxy', 1);
 const PORT = 3000;
 const API_KEY = "QjT6CoRwXS";
 
+// ===== KOMPRESSION KOMPLETT DEAKTIVIEREN =====
+app.use((req, res, next) => {
+  // Alle Kompression-Headers entfernen
+  res.removeHeader('Content-Encoding');
+  res.removeHeader('Transfer-Encoding');
+  
+  // Explizit keine Kompression
+  res.set('Content-Encoding', 'identity');
+  
+  // Für API-Routen spezielle Headers
+  if (req.path.startsWith('/api/')) {
+    res.set('Content-Type', 'application/json; charset=utf-8');
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+  
+  next();
+});
+
+// Deaktiviere Express automatische Kompression falls vorhanden
+app.disable('etag');
+app.disable('x-powered-by');
+
 // ===== GLOBALE VARIABLEN =====
 let chatsLocked = true;
 let bugReportIPData = {};
@@ -99,7 +123,46 @@ function readJSON(filePath) {
 
 function writeJSON(filePath, data) {
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    // Stelle sicher dass data ein Array ist
+    if (!Array.isArray(data)) {
+      console.error('writeJSON: Data ist kein Array:', typeof data);
+      return;
+    }
+    
+    // Erstelle Backup vor dem Schreiben
+    if (fs.existsSync(filePath)) {
+      const backupPath = filePath + '.backup';
+      try {
+        fs.copyFileSync(filePath, backupPath);
+      } catch (backupError) {
+        console.warn('Konnte kein Backup erstellen:', backupError);
+      }
+    }
+    
+    // Schreibe neue Datei
+    const jsonString = JSON.stringify(data, null, 2);
+    fs.writeFileSync(filePath, jsonString, 'utf8');
+    
+    // Verifiziere dass die geschriebene Datei gültig ist
+    try {
+      const verification = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      if (!Array.isArray(verification)) {
+        throw new Error('Geschriebene Datei ist kein Array');
+      }
+    } catch (verifyError) {
+      console.error('Verification failed für', filePath, verifyError);
+      
+      // Restore backup
+      const backupPath = filePath + '.backup';
+      if (fs.existsSync(backupPath)) {
+        try {
+          fs.copyFileSync(backupPath, filePath);
+          console.log('Backup wiederhergestellt für', filePath);
+        } catch (restoreError) {
+          console.error('Konnte Backup nicht wiederherstellen:', restoreError);
+        }
+      }
+    }
   } catch (err) {
     console.error("Fehler beim Schreiben in", filePath, err);
   }
@@ -367,7 +430,7 @@ app.post('/api/signup', accountLimiter, accountFiveMinLimiter, globalAccountLimi
   res.json({ message: 'Anfrage wurde gesendet. Bitte warten Sie auf die Freigabe.' });
 });
 
-// ===== CHAT-ENDPUNKTE =====
+// ===== CHAT-ENDPUNKTE - VERBESSERT =====
 app.get('/api/channels', authMiddleware, (req, res) => {
   fs.readdir(chatsDir, (err, files) => {
     if (err) return res.status(500).json({ message: 'Fehler beim Lesen der Chat-Dateien' });
@@ -380,6 +443,8 @@ app.get('/api/channels', authMiddleware, (req, res) => {
 
 app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
   const chatName = req.params.chatName;
+  
+  // Zugriffskontrolle
   if (chatName === 'Admin_chat' && !req.user.isAdmin) {
     return res.status(403).json({ message: 'Kein Zugriff auf Admin Chat' });
   }
@@ -388,28 +453,101 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
   }
 
   const filePath = path.join(chatsDir, chatName + '.json');
-  if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'Chat nicht gefunden' });
+  
+  // Prüfe ob Datei existiert
+  if (!fs.existsSync(filePath)) {
+    console.log(`Chat-Datei nicht gefunden: ${filePath}`);
+    return res.status(404).json({ message: 'Chat nicht gefunden' });
+  }
 
   let chatData = [];
   try {
-    chatData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch (e) {
-    console.error('Fehler beim Lesen des Chats', e);
-    return res.status(500).json({ message: 'Fehler beim Lesen des Chats' });
-  }
+    // Lese Datei mit Error-Handling
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    console.log(`Gelesene Datei ${chatName}: ${fileContent.length} Zeichen`);
+    
+    if (!fileContent.trim()) {
+      console.log(`Leere Chat-Datei: ${chatName}`);
+      // EXPLIZIT JSON HEADERS SETZEN
+      res.set('Content-Type', 'application/json; charset=utf-8');
+      res.set('Content-Encoding', 'identity');
+      return res.json([]);
+    }
 
-  chatData = removeDisallowedMessages(filePath, chatData);
-  chatData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    try {
+      chatData = JSON.parse(fileContent);
+    } catch (parseError) {
+      console.error(`JSON Parse Fehler in ${chatName}:`, parseError);
+      console.error(`Datei-Inhalt (erste 200 Zeichen):`, fileContent.substring(0, 200));
+      
+      // Versuche die Datei zu reparieren - mehrere Arrays kombinieren
+      try {
+        const arrayMatches = fileContent.match(/\[[^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*\]/g);
+        if (arrayMatches && arrayMatches.length > 1) {
+          console.log(`Repariere Chat-Datei ${chatName} mit ${arrayMatches.length} Arrays`);
+          let combinedData = [];
+          arrayMatches.forEach(match => {
+            try {
+              const parsed = JSON.parse(match);
+              if (Array.isArray(parsed)) {
+                combinedData = combinedData.concat(parsed);
+              }
+            } catch (e) {
+              console.warn('Konnte Array nicht parsen:', e);
+            }
+          });
+          
+          // Schreibe reparierte Datei zurück
+          writeJSON(filePath, combinedData);
+          chatData = combinedData;
+          console.log(`Chat-Datei ${chatName} erfolgreich repariert`);
+        } else {
+          throw parseError;
+        }
+      } catch (repairError) {
+        console.error(`Konnte Chat-Datei ${chatName} nicht reparieren:`, repairError);
+        // EXPLIZIT JSON HEADERS SETZEN
+        res.set('Content-Type', 'application/json; charset=utf-8');
+        res.set('Content-Encoding', 'identity');
+        return res.status(500).json({ message: 'Chat-Datei beschädigt und nicht reparierbar' });
+      }
+    }
 
-  if (req.query.olderThan) {
-    const olderThanDate = new Date(req.query.olderThan);
-    chatData = chatData.filter(msg => new Date(msg.timestamp) < olderThanDate);
+    // Entferne unerlaubte Nachrichten
+    chatData = removeDisallowedMessages(filePath, chatData);
+    
+    // Sortiere nach Timestamp
+    chatData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    // Filter für ältere Nachrichten
+    if (req.query.olderThan) {
+      const olderThanDate = new Date(req.query.olderThan);
+      chatData = chatData.filter(msg => new Date(msg.timestamp) < olderThanDate);
+    }
+    
+    // Limit anwenden
+    if (req.query.limit) {
+      const limit = parseInt(req.query.limit, 10);
+      if (!isNaN(limit) && limit > 0) {
+        chatData = chatData.slice(-limit);
+      }
+    }
+
+    // EXPLIZIT JSON HEADERS SETZEN BEVOR ANTWORT
+    res.set('Content-Type', 'application/json; charset=utf-8');
+    res.set('Content-Encoding', 'identity');
+    res.set('Content-Length', Buffer.byteLength(JSON.stringify(chatData)));
+    
+    console.log(`Sende ${chatData.length} Nachrichten für ${chatName}`);
+    res.json(chatData);
+
+  } catch (error) {
+    console.error(`Fehler beim Lesen des Chats ${chatName}:`, error);
+    // EXPLIZIT JSON HEADERS SETZEN
+    res.set('Content-Type', 'application/json; charset=utf-8');
+    res.set('Content-Encoding', 'identity');
+    res.status(500).json({ message: 'Fehler beim Lesen des Chats' });
   }
-  if (req.query.limit) {
-    const limit = parseInt(req.query.limit, 10);
-    if (!isNaN(limit) && limit > 0) chatData = chatData.slice(-limit);
-  }
-  res.json(chatData);
 });
 
 app.post('/api/chats/:chatName', authMiddleware, (req, res) => {
@@ -785,9 +923,55 @@ app.get('/api/extra-chats/messages/:chatFile', authMiddleware, (req, res) => {
 
   let chatData = [];
   try {
-    chatData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    if (!fileContent.trim()) {
+      // EXPLIZIT JSON HEADERS SETZEN
+      res.set('Content-Type', 'application/json; charset=utf-8');
+      res.set('Content-Encoding', 'identity');
+      return res.json([]);
+    }
+    
+    try {
+      chatData = JSON.parse(fileContent);
+    } catch (parseError) {
+      console.error(`JSON Parse Fehler in Extra-Chat ${chatFile}:`, parseError);
+      
+      // Versuche Reparatur wie bei normalen Chats
+      try {
+        const arrayMatches = fileContent.match(/\[[^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*\]/g);
+        if (arrayMatches && arrayMatches.length > 1) {
+          console.log(`Repariere Extra-Chat ${chatFile} mit ${arrayMatches.length} Arrays`);
+          let combinedData = [];
+          arrayMatches.forEach(match => {
+            try {
+              const parsed = JSON.parse(match);
+              if (Array.isArray(parsed)) {
+                combinedData = combinedData.concat(parsed);
+              }
+            } catch (e) {
+              console.warn('Konnte Array nicht parsen:', e);
+            }
+          });
+          
+          writeJSON(filePath, combinedData);
+          chatData = combinedData;
+          console.log(`Extra-Chat ${chatFile} erfolgreich repariert`);
+        } else {
+          throw parseError;
+        }
+      } catch (repairError) {
+        console.error(`Konnte Extra-Chat ${chatFile} nicht reparieren:`, repairError);
+        // EXPLIZIT JSON HEADERS SETZEN
+        res.set('Content-Type', 'application/json; charset=utf-8');
+        res.set('Content-Encoding', 'identity');
+        return res.status(500).json({ message: 'Extra-Chat-Datei beschädigt' });
+      }
+    }
   } catch (e) {
     console.error('Fehler beim Lesen des Extra-Chats', e);
+    // EXPLIZIT JSON HEADERS SETZEN
+    res.set('Content-Type', 'application/json; charset=utf-8');
+    res.set('Content-Encoding', 'identity');
     return res.status(500).json({ message: 'Fehler beim Lesen des Extra-Chats' });
   }
 
@@ -800,6 +984,12 @@ app.get('/api/extra-chats/messages/:chatFile', authMiddleware, (req, res) => {
     const limit = parseInt(req.query.limit, 10);
     if (!isNaN(limit) && limit > 0) chatData = chatData.slice(-limit);
   }
+  
+  // EXPLIZIT JSON HEADERS SETZEN BEVOR ANTWORT
+  res.set('Content-Type', 'application/json; charset=utf-8');
+  res.set('Content-Encoding', 'identity');
+  res.set('Content-Length', Buffer.byteLength(JSON.stringify(chatData)));
+  
   res.json(chatData);
 });
 
@@ -1181,7 +1371,6 @@ app.post('/api/admin/update-media', adminAuth, mediaUpload.fields([
   Object.entries(fileMapping).forEach(([field, targetFilename]) => {
     if (req.files && req.files[field]) {
       const targetDir = field === 'video' ? videoDir : imagesDir;
-      const targetPath = path.join(targetDir, targetFilename);
       if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);
       const uploadedFile = req.files[field][0];
       fs.renameSync(uploadedFile.path, targetPath);
