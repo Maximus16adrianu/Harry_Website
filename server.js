@@ -456,7 +456,6 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
   
   // Prüfe ob Datei existiert
   if (!fs.existsSync(filePath)) {
-    console.log(`Chat-Datei nicht gefunden: ${filePath}`);
     return res.status(404).json({ message: 'Chat nicht gefunden' });
   }
 
@@ -464,10 +463,8 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
   try {
     // Lese Datei mit Error-Handling
     const fileContent = fs.readFileSync(filePath, 'utf8');
-    console.log(`Gelesene Datei ${chatName}: ${fileContent.length} Zeichen`);
     
     if (!fileContent.trim()) {
-      console.log(`Leere Chat-Datei: ${chatName}`);
       // EXPLIZIT JSON HEADERS SETZEN
       res.set('Content-Type', 'application/json; charset=utf-8');
       res.set('Content-Encoding', 'identity');
@@ -477,14 +474,12 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
     try {
       chatData = JSON.parse(fileContent);
     } catch (parseError) {
-      console.error(`JSON Parse Fehler in ${chatName}:`, parseError);
-      console.error(`Datei-Inhalt (erste 200 Zeichen):`, fileContent.substring(0, 200));
+      console.error(`JSON Parse Fehler in ${chatName}:`, parseError.message);
       
       // Versuche die Datei zu reparieren - mehrere Arrays kombinieren
       try {
         const arrayMatches = fileContent.match(/\[[^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*\]/g);
         if (arrayMatches && arrayMatches.length > 1) {
-          console.log(`Repariere Chat-Datei ${chatName} mit ${arrayMatches.length} Arrays`);
           let combinedData = [];
           arrayMatches.forEach(match => {
             try {
@@ -493,19 +488,18 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
                 combinedData = combinedData.concat(parsed);
               }
             } catch (e) {
-              console.warn('Konnte Array nicht parsen:', e);
+              // Silent fail für einzelne Arrays
             }
           });
           
           // Schreibe reparierte Datei zurück
           writeJSON(filePath, combinedData);
           chatData = combinedData;
-          console.log(`Chat-Datei ${chatName} erfolgreich repariert`);
         } else {
           throw parseError;
         }
       } catch (repairError) {
-        console.error(`Konnte Chat-Datei ${chatName} nicht reparieren:`, repairError);
+        console.error(`Chat-Datei ${chatName} nicht reparierbar:`, repairError.message);
         // EXPLIZIT JSON HEADERS SETZEN
         res.set('Content-Type', 'application/json; charset=utf-8');
         res.set('Content-Encoding', 'identity');
@@ -538,7 +532,6 @@ app.get('/api/chats/:chatName', authMiddleware, (req, res) => {
     res.set('Content-Encoding', 'identity');
     res.set('Content-Length', Buffer.byteLength(JSON.stringify(chatData)));
     
-    console.log(`Sende ${chatData.length} Nachrichten für ${chatName}`);
     res.json(chatData);
 
   } catch (error) {
@@ -1357,26 +1350,83 @@ app.post('/api/admin/update-media', adminAuth, mediaUpload.fields([
   { name: 'video', maxCount: 1 },
   ...Array.from({ length: 19 }, (_, i) => ({ name: `image${i + 1}`, maxCount: 1 }))
 ]), (req, res) => {
-  const videoDir = path.join(__dirname, 'private', 'homepage', 'videos');
-  const imagesDir = path.join(__dirname, 'private', 'homepage', 'images');
-  [videoDir, imagesDir].forEach(dir => {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  });
+  try {
+    // Korrekte Pfade: private/homepage/videos und private/homepage/images  
+    const videoDir = path.join(__dirname, 'private', 'homepage', 'videos');
+    const imagesDir = path.join(__dirname, 'private', 'homepage', 'images');
+    
+    // Erstelle Verzeichnisse falls sie nicht existieren
+    [videoDir, imagesDir].forEach(dir => {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    });
 
-  const fileMapping = { video: 'video1.mp4' };
-  for (let i = 1; i <= 19; i++) {
-    fileMapping[`image${i}`] = `bild${i}.png`;
-  }
-
-  Object.entries(fileMapping).forEach(([field, targetFilename]) => {
-    if (req.files && req.files[field]) {
-      const targetDir = field === 'video' ? videoDir : imagesDir;
-      if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);
-      const uploadedFile = req.files[field][0];
-      fs.renameSync(uploadedFile.path, targetPath);
+    // File mapping für Ziel-Dateinamen
+    const fileMapping = { 
+      video: 'video1.mp4'
+    };
+    
+    // Bilder 1-19
+    for (let i = 1; i <= 19; i++) {
+      fileMapping[`image${i}`] = `bild${i}.png`;
     }
-  });
-  res.json({ message: 'Medien erfolgreich aktualisiert' });
+
+    let filesProcessed = 0;
+    const processedFiles = [];
+
+    // Verarbeite jede hochgeladene Datei
+    Object.entries(fileMapping).forEach(([fieldName, targetFileName]) => {
+      if (req.files && req.files[fieldName] && req.files[fieldName][0]) {
+        try {
+          // Bestimme Ziel-Verzeichnis basierend auf Dateityp
+          const isVideo = fieldName === 'video';
+          const targetDirectory = isVideo ? videoDir : imagesDir;
+          const fullTargetPath = path.join(targetDirectory, targetFileName);
+          
+          // Lösche alte Datei falls vorhanden
+          if (fs.existsSync(fullTargetPath)) {
+            fs.unlinkSync(fullTargetPath);
+          }
+          
+          // Hole die hochgeladene Datei
+          const uploadedFile = req.files[fieldName][0];
+          
+          // Verschiebe die Datei zum Ziel
+          fs.renameSync(uploadedFile.path, fullTargetPath);
+          
+          filesProcessed++;
+          processedFiles.push({
+            field: fieldName,
+            fileName: targetFileName,
+            path: fullTargetPath
+          });
+          
+        } catch (fileError) {
+          console.error(`Fehler bei Media-Upload ${fieldName}:`, fileError.message);
+        }
+      }
+    });
+
+    // Antwort senden
+    if (filesProcessed > 0) {
+      res.json({ 
+        message: `${filesProcessed} Datei(en) erfolgreich aktualisiert`,
+        filesProcessed,
+        files: processedFiles.map(f => f.fileName)
+      });
+    } else {
+      res.status(400).json({ 
+        message: 'Keine Dateien zum Verarbeiten gefunden' 
+      });
+    }
+    
+  } catch (error) {
+    console.error('Fehler beim Media-Update:', error.message);
+    res.status(500).json({ 
+      message: 'Fehler beim Aktualisieren der Medien: ' + error.message 
+    });
+  }
 });
 
 app.post('/api/admin/chats-lock', adminAuth, (req, res) => {
